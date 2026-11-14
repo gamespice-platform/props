@@ -1,38 +1,24 @@
-This is the **sandbox** asset for TMC's **Dot** collection. It is what you add when you want players to build things rather than only shoot at them.
+# dot-props
 
-This collection of assets provides modular building blocks for creating games and applications within the TMC ecosystem, ensuring consistency and interoperability across all `dot-*` assets. This includes core functionality, networking, authentication, cloud integration, and more.
+A sandbox for Godot games: players spawn props (crates, furniture, anything with a physics body), move them with a physics gun and a gravity gun, break them, ride on them and wire them together. Props come from a catalogue the operator can edit as JSON.
 
-**These assets are COMPLETELY OPEN SOURCE**. You are free to use, modify, and distribute them under the terms of the MIT license. The only thing not open source is the back-end web infrastructure. So if you opt into using your own authentication backend instead of integrating with TMC, you will need to build and integrate your own back-end infrastructure.
+The server owns every prop and clients only draw what it sends, because physics does not come out identical on two machines. Limits keep a sandbox server alive: per-player budget, spawn delay, frozen-prop limit, undo list, a server-wide limit, and clean-up when a player leaves.
 
-## From Maintainer & WARNING
-This asset, along with all the others, was built initially with **Claude Code** and will continue to be maintained and extended using it. This is because I (`gamemann`) cannot build the entire TMC platform alone (I wish I could lol).
+## Install
 
-**Please treat this as partially tested.** Every asset has its own headless test suite and those suites pass, but very little of this has been in front of real players yet. Expect rough edges, and please report anything you run into.
+1. Get [Godot 4.7](https://godotengine.org/download).
+2. Either use [dot-bootstrap](https://github.com/modcommunity/dot-bootstrap), which clones every project and links the addons, or copy `addons/dot_props/` and [dot-core](https://github.com/modcommunity/dot-core)'s `addons/dot_core/` into your project and enable dot-props in *Project > Project Settings > Plugins*.
 
-I intend on reviewing code, testing, and editing documentation regularly. If you're interested in helping out, please let me know!
+dot-core is the only dependency.
 
-## What it does
-It lets players spawn props (crates, furniture, anything with a physics body) and move them around with tools: a **physics gun** that holds, rotates and freezes a prop, and a **gravity gun** that pulls, carries and punts one. The props come from a catalogue an operator can edit as JSON.
-
-Most of the work is in the limits, because a sandbox server without them falls over quickly. Each player has a budget, a short wait between spawns, a limit on frozen props and an undo list, the whole server has a cap, and a player's props are removed when they leave.
-
-It can also make props breakable (with health, and an optional explosion), let players stand on props and be carried by them, and wire props together, such as a button that opens a door.
-
-The server owns every prop, and clients only draw what it sends. Physics simulation does not come out exactly the same on two machines, so a prop predicted on the client would be corrected all the time.
-
-## Getting started
-You need [Godot 4.7](https://godotengine.org/download). The easiest way to get this addon and the ones it needs is [dot-bootstrap](https://github.com/modcommunity/dot-bootstrap), which clones every project and links the addons into each one.
-
-To add it to your own project by hand, copy `addons/dot_props/` and [dot-core](https://github.com/modcommunity/dot-core)'s `addons/dot_core/` into it and enable dot-props in **Project → Project Settings → Plugins**. dot-core is the only dependency.
-
-## Using it
+## Spawning props
 
 ```gdscript
 var spawner := DotPropSpawner.new()
-spawner.authoritative = true                  # on the server only. Otherwise every spawn is refused
+spawner.authoritative = true                  # server only; otherwise every spawn is refused
 spawner.catalogue = DotPropCatalogue.load_json("res://props.json").value
 spawner.limits = DotPropLimits.new()
-spawner.world_ref = DotNodeRef.of_path(^"../World")   # where props are added, relative to the spawner
+spawner.world_ref = DotNodeRef.of_path(^"../World")   # where props are added
 add_child(spawner)
 
 spawner.refused.connect(func(player, prop, reason): tell(player, reason))
@@ -43,7 +29,7 @@ spawner.undo(player_id)
 spawner.player_left(player_id)                         # removes their props
 ```
 
-To show a player's subscribed Workshop props in solo, call `spawner.catalogue.follow_content(DotContentIndex.shared())` and rebuild the menu on `content_changed`. Online shows none, the game's own ids win, and a pack prop is listed as "Name [Pack]". See [docs/spawning.md](docs/spawning.md#workshop-props-follow_content).
+To show a player's subscribed Workshop props in solo, call `spawner.catalogue.follow_content(DotContentIndex.shared())` and rebuild the menu on `content_changed`. See [docs/spawning.md](docs/spawning.md#workshop-props-follow_content).
 
 `props.json`:
 
@@ -58,9 +44,48 @@ To show a player's subscribed Workshop props in solo, call `spawner.catalogue.fo
 }
 ```
 
-A prop's scene is a `RigidBody3D` with no script. Other fields: `size` (a prop larger than the server's `max_size` is refused), `limit_group` (counted against `group_limits`), `can_freeze`, `rideable`, `break_impact_speed`, `material` (for break effects), `explode_radius` / `explode_damage` / `explode_force`, `entitlement` and `permission` (who may spawn it), and `meta` for your own data.
+A prop's scene is a `RigidBody3D` with no script. Optional fields:
 
-### The tools
+| Field | Meaning |
+| --- | --- |
+| `size` | Size class. Larger than the server's `max_size` is refused. |
+| `limit_group` | Counted against `group_limits`. |
+| `can_freeze`, `can_grab`, `rideable` | What players may do with it. |
+| `break_impact_speed`, `max_health` | Breaking. `max_health` 0 (default) means unbreakable. |
+| `material` | Used for break effects. |
+| `explode_radius`, `explode_damage`, `explode_force` | Explosion when it breaks. |
+| `entitlement`, `permission` | Who may spawn it. |
+| `meta` | Your own data. |
+
+## Settings
+
+Limits live in a `DotPropLimits` resource, layered like every dot config: inspector defaults, then a JSON file, then environment, then command line.
+
+```gdscript
+var limits := DotPropLimits.new()
+limits.load_layered("user://props.json")
+spawner.limits = limits
+```
+
+Example: `DOT_PROPS_PER_PLAYER_BUDGET=100 <your server> --props-world-budget=2048`.
+
+| Setting | Default | Meaning |
+| --- | --- | --- |
+| `per_player_budget` | 64 | Props one player may have, counted by `cost`. 0 = unlimited. |
+| `spawn_interval` | 0.15 | Seconds between one player's spawns. |
+| `per_player_frozen` | 128 | Props one player may freeze. 0 = unlimited. |
+| `max_size` | `HUGE` | Largest size class that may be spawned. |
+| `group_limits` | none | Per-player counts by `limit_group`, such as `{"vehicles": 4}`. |
+| `world_budget` | 1024 | Props on the server from everybody. 0 = unlimited. |
+| `clean_up_on_leave` | true | Remove a player's props when they leave. |
+| `undo_depth` | 64 | Spawns a player can undo. |
+| `grab_range` | 40 | Physics gun reach in metres. |
+| `grab_mass_limit` | 0 | Heaviest prop it can hold, in kg. 0 = any. |
+| `hold_distance_min` / `hold_distance_max` | 1.5 / 25 | How near and far a held prop can be. |
+
+All numbers are defaults you can change.
+
+## Tools
 
 ```gdscript
 var gun := DotPhysGun.new()
@@ -72,10 +97,8 @@ gun.hold(eye_position, aim_direction, view_basis, delta)         # every tick wh
 gun.push(scroll_amount, delta)                                   # nearer or further
 gun.rotate_held(yaw_degrees, pitch_degrees)
 gun.release()
-gun.freeze_held()                                                # leave it frozen in place
-```
+gun.freeze_held()
 
-```gdscript
 var grav := DotGravGun.new()
 grav.spawner = spawner
 grav.wielder = player_id
@@ -86,14 +109,14 @@ grav.punt(space_state, eye_position, aim_direction)
 grav.drop()
 ```
 
-Anybody can move anybody's props by default. `set_protected(player_id, true)` stops other players touching that player's props, and nobody can grab a prop somebody else is already holding.
+Anybody can move anybody's props by default. `set_protected(player_id, true)` stops other players touching that player's props. Nobody can grab a prop someone else is holding. See [docs/tools.md](docs/tools.md).
 
-### Breakable props
+## Breakable props
 
 ```gdscript
 var damage := DotPropDamage.new()
 damage.spawner_ref = DotNodeRef.of_path(^"../Props")
-damage.authoritative = true                   # on the server. Otherwise hurt() refuses
+damage.authoritative = true                   # server only; otherwise hurt() refuses
 add_child(damage)
 
 damage.hurt(prop.instance_id, 25.0, attacker_id)
@@ -101,28 +124,31 @@ damage.impact(prop.instance_id, closing_speed, driver_id)   # from a collision
 damage.broken.connect(func(prop, at, by): play_break_effect(at))
 ```
 
-A prop with `max_health` 0 (the default) cannot be broken. When a prop with an explosion breaks, the addon pushes the other props nearby and fires `exploded` with the radius, damage and force. Hurting players and pushing anything that is not a prop is up to your game.
+When a prop with an explosion breaks, nearby props are pushed and `exploded` fires with the radius, damage and force. Hurting players is up to your game.
 
-### Standing on props
-A character controller treats a prop like the floor, so a crate never sinks, tips or moves a player standing on it. `DotPropCarry` fixes that. Call `ride()` once per tick for each player on the ground: it applies their weight to the prop under them and returns how far the prop moved them this tick. `push()` shoves a prop a player walks into.
+## Standing on props
 
-### Collision shaped like the model
-A prop placed in a map collides as its box unless you give it pieces. `DotPropPieces.measure(model, frame)` cuts a model into a few convex hulls (a tree's trunk, branches and leaf clumps; a table's top and legs) with the engine's convex decomposition. It is slow and needs the meshes, so run it in a tool and ship the numbers:
+`DotPropCarry` lets players stand on props. Call `ride()` once per tick for each grounded player: it applies their weight to the prop and returns how far the prop moved them. `push()` shoves a prop a player walks into. See [docs/damage-and-carry.md](docs/damage-and-carry.md).
+
+## Collision shaped like the model
+
+A prop in a map collides as a box unless given pieces. `DotPropPieces.measure(model, frame)` cuts a model into convex hulls. It is slow, so run it in a tool and ship the result. Details: [docs/pieces.md](docs/pieces.md).
 
 ```gdscript
-# In your measuring tool (an editor build):
+# In your measuring tool (editor build):
 var pieces := DotPropPieces.measure(model_scene.instantiate(), Transform3D(Basis.from_scale(Vector3.ONE * scale), offset))
 file[prop_id] = DotPropPieces.encode(pieces)   # empty when the box is as good
 
-# At run time, on the server and every client alike:
+# At run time, on the server and every client:
 for shape in DotPropPieces.shapes(DotPropPieces.decode(file[prop_id])):
     var node := CollisionShape3D.new()
     node.shape = shape
     body.add_child(node)
 ```
 
-### Wiring props together
-A prop lists what it can send and receive in its `meta`, for example `{"outputs": ["pressed"]}` on a button and `{"inputs": ["open", "close"]}` on a door.
+## Wiring props together
+
+A prop lists what it can send and receive in `meta`, for example `{"outputs": ["pressed"]}` on a button and `{"inputs": ["open", "close"]}` on a door.
 
 ```gdscript
 var io := DotPropIO.new()
@@ -130,49 +156,15 @@ io.spawner_ref = DotNodeRef.of_path(^"../Props")
 add_child(io)
 
 io.link(button.instance_id, &"pressed", door.instance_id, &"open")
-io.fire(button.instance_id, &"pressed")       # when somebody presses it
+io.fire(button.instance_id, &"pressed")
 io.input_received.connect(func(target, input, value, source): open_door(target))
 ```
 
-What "open" means for a door is up to your game.
-
-## Settings
-The limits live in a `DotPropLimits` resource. Like every Dot config it is layered: inspector defaults, then a JSON file, then the environment, then the command line. Call `load_layered()` on it before giving it to the spawner:
-
-```gdscript
-var limits := DotPropLimits.new()
-limits.load_layered("user://props.json")
-spawner.limits = limits
-```
-
-```bash
-DOT_PROPS_PER_PLAYER_BUDGET=100 godot --headless -- --props-world-budget=2048
-```
-
-| Setting | Default | What it does |
-| --- | --- | --- |
-| `per_player_budget` | 64 | Most props one player may have, counted by `cost`. 0 is unlimited |
-| `spawn_interval` | 0.15 | Seconds between one player's spawns |
-| `per_player_frozen` | 128 | Most props one player may freeze. 0 is unlimited |
-| `max_size` | `HUGE` | The largest size class that may be spawned |
-| `group_limits` | none | Per-player counts by `limit_group`, such as `{"vehicles": 4}` |
-| `world_budget` | 1024 | Most props on the server, from everybody. 0 is unlimited |
-| `clean_up_on_leave` | true | Remove a player's props when they leave |
-| `undo_depth` | 64 | How many spawns a player can undo |
-| `grab_range` | 40 | How far the physics gun reaches, in metres |
-| `grab_mass_limit` | 0 | Heaviest prop it can hold, in kilograms. 0 is any |
-| `hold_distance_min` / `hold_distance_max` | 1.5 / 25 | How near and far a held prop can be |
-
-## Testing
-
-```bash
-godot --headless --path . --import
-godot --headless --path . res://examples/props_selftest.tscn
-```
+What "open" means is up to your game.
 
 ## Hiding as a prop
 
-For hide-and-seek games, `DotPropDisguise` holds what a player is disguised as and works out the collision capsule, the health and the hitbox turn from the prop's size, the same way on the server and every client. `DotPropTaunts` keeps the taunt list, the cooldown, the points, and the meter that forces a taunt on somebody who has stood still too long.
+For hide-and-seek games, `DotPropDisguise` holds what a player is disguised as and works out the collision capsule, health and hitbox from the prop's size, identically on the server and clients. `DotPropTaunts` keeps the taunt list, cooldown, points, and a meter that forces a taunt on someone who stood still too long. See [docs/hunt.md](docs/hunt.md).
 
 ```gdscript
 var rules := DotPropDisguiseRules.new()        # fill from your config
@@ -189,40 +181,62 @@ if taunts.due(player_key, now):
 
 ## Toys
 
-Things on a map players play with, placed by the map's data: a beach ball, a football, a bowling ball and pins, a barrel, a tyre, a punching bag, a swing, a see-saw, a roundabout, a wobbly platform, a trampoline, a bounce pad, a switch, a lamp post, a fountain, a horn and a bell. The server simulates them and clients draw what it sends.
+Map objects players play with, placed from the map's data: beach ball, football, bowling ball and pins, barrel, tyre, punching bag, swing, see-saw, roundabout, wobbly platform, trampoline, bounce pad, switch, lamp post, fountain, horn and bell. The server simulates them and clients draw what it sends.
 
 ```gdscript
 var toys := DotPropBodyBox.new()
 toys.authoritative = is_server
 toys.draw = not is_dedicated_server
-toys.loose_layer = layout.layer_mask(&"toy")      # balls and barrels: people walk through and push them
+toys.loose_layer = layout.layer_mask(&"toy")      # balls, barrels: pushed by walking into them
 toys.loose_mask = layout.collision_mask(&"toy")
-toys.solid_layer = layout.layer_mask(&"prop")     # see-saws and frames: people stand on them
+toys.solid_layer = layout.layer_mask(&"prop")     # see-saws, frames: people stand on them
 toys.solid_mask = layout.collision_mask(&"prop")
 add_child(toys)
 toys.build(map["toys"])          # [{"toy": "beach_ball", "at": [x, y, z], "yaw": 0}, ...]
 
-# On the server, every tick, for each player:
-toys.push_from(feet, velocity, radius, height)   # walking into a ball sends it on
-toys.stand_on(feet, 70.0)                         # weight on a see-saw
+# Server, every tick, per player:
+toys.push_from(feet, velocity, radius, height)
+toys.stand_on(feet, 70.0)
 toys.advance(delta)
 # When a player presses use:
 var index := toys.aimed(eye, aim)
 if index >= 0:
     toys.use(index, eye, aim)
-# In your movement code, on every end: a trampoline or pad under the feet throws them.
-var thrown := toys.launch_for(feet, velocity)    # {velocity, index} or {}
-# And after the move: a roundabout carries whoever stands on it round with it.
+# In movement code: trampolines and pads throw the player; roundabouts carry them.
+var thrown := toys.launch_for(feet, velocity)                 # {velocity, index} or {}
 var carried := toys.carry_for(feet, delta, state.ground_id)   # {offset, yaw, index} or {}
-# When a shot hits something, before your own damage:
-toys.shot(collider, point, direction, damage)    # a toy's index, or -1 when it was not one
-toys.shot_along(origin, direction, reach, damage, level_mask)   # when your trace never meets a toy
-toys.blast(at, radius, speed)                     # an explosion
+# On a shot or explosion:
+toys.shot(collider, point, direction, damage)
+toys.shot_along(origin, direction, reach, damage, level_mask)
+toys.blast(at, radius, speed)
 ```
 
-Replicate each toy by its index with `state_transform()`, `on` and `count`, and call `show_state` with them on a client. Connect `sound` to your audio and add `DotPropBodySounds.rows()` to your sound catalogue. `sv_physprops 0` removes them, `sv_physprops_awake` caps how many simulate at once (24, or 8 in a browser), and `sv_physprops_push` sets (the old `sv_toys*` names still work as aliases) how hard walking into one pushes it. Add or retune toys with `DotPropBodyCatalogue.merge_json`. See [docs/toys.md](docs/toys.md).
+Replicate each toy by its index with `state_transform()`, `on` and `count`, and call `show_state` on clients. Connect `sound` to your audio and add `DotPropBodySounds.rows()` to your sound catalogue. Add or retune toys with `DotPropBodyCatalogue.merge_json`. See [docs/toys.md](docs/toys.md).
 
-The toy sounds are Kenney's (CC0) plus a horn made for this addon; `addons/dot_props/toys/sounds/CREDITS.md` lists every file. Eight toys (pin, barrel, crate, tyre, lamp post, fountain, horn, bell) have a small glb look in `addons/dot_props/toys/models/`, made for this addon and released CC0; the generator is `art-src/build_toy_models.py` (Blender, headless). Every toy still has a code-built fallback, so a pack that strips `models/` draws as before. The other toys are drawn with meshes made in code.
+| Server setting | Meaning |
+| --- | --- |
+| `sv_physprops` | 0 removes toys. |
+| `sv_physprops_awake` | How many simulate at once (default 24, or 8 in a browser). |
+| `sv_physprops_push` | How hard walking into one pushes it. |
 
-## License
-MIT. See [LICENSE](LICENSE).
+The old `sv_toys*` names still work as aliases.
+
+## Credits
+
+| Asset | Author / source | License |
+| --- | --- | --- |
+| Toy sounds | [Kenney](https://www.kenney.nl) | CC0 |
+| Horn sound | Made for this addon | CC0 |
+| Toy models (pin, barrel, crate, tyre, lamp post, fountain, horn, bell) in `addons/dot_props/toys/models/` | Made for this addon with `art-src/build_toy_models.py` (headless Blender) | CC0 |
+
+Every toy has a code-built fallback, so a pack without `models/` still draws. Per-file list of sounds: `addons/dot_props/toys/sounds/CREDITS.md`.
+
+## Testing
+
+Import the project once, then run `examples/props_selftest.tscn` headless with Godot. More docs: [docs/models.md](docs/models.md), [docs/history.md](docs/history.md).
+
+## Status and licence
+
+Part of the TMC **dot-\*** family of Godot addons. Written with Claude Code and maintained by `gamemann`. Every addon has headless tests, but little of this has been played by real users yet, so expect rough edges and please [open an issue](https://github.com/modcommunity/dot-props/issues) when you hit one.
+
+MIT licence, see [LICENSE](LICENSE). The only closed part of the TMC platform is the web back end; you can use your own instead of TMC's.
