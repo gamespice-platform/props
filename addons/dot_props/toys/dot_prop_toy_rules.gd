@@ -13,7 +13,7 @@ const CVAR_ENABLED := "sv_physprops"
 const CVAR_AWAKE := "sv_physprops_awake"
 const CVAR_PUSH := "sv_physprops_push"
 
-## The names before 2026-11-08, kept as aliases: each is registered next to its new name, applies
+## The old names, kept as aliases: each is registered next to its new name, applies
 ## to the same rule and follows it. (`sv_props` is taken by g2gfast, hence `sv_physprops`.)
 const LEGACY_CVAR_ENABLED := "sv_toys"
 const LEGACY_CVAR_AWAKE := "sv_toys_awake"

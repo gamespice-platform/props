@@ -57,10 +57,9 @@ static func blast_hits(panes: Dictionary, at: Vector3, radius: float, amount: fl
 	return out
 
 
-## Panes struck at speed. [param bodies] are `[id, RigidBody3D]`, [param walkers] `[id, feet position]`;
-## [param last_speed] maps id to the velocity at the end of the last tick (the contact has already
-## stopped them now). Only the part along the pane's normal counts. Returns `[node, damage]`: a body
-## does mass * speed / 2, a walker the pane's whole health.
+## Panes struck at speed. [param bodies] are `[id, RigidBody3D]`, [param walkers] `[id, feet position]`; [param last_speed] maps id to the velocity
+## at the end of the last tick (the contact has already stopped them now). Only the part along the pane's normal counts.
+## Returns `[node, damage]`: a body does mass * speed / 2, a walker the pane's whole health.
 static func impact_hits(panes: Dictionary, bodies: Array, walkers: Array, last_speed: Dictionary) -> Array:
 	var hits := []
 	for index: int in panes.keys():
