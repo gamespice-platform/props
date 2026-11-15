@@ -26,33 +26,7 @@ func _ready() -> void:
 
 
 func _run() -> void:
-	var env := WorldEnvironment.new()
-	var e := Environment.new()
-	e.background_mode = Environment.BG_COLOR
-	e.background_color = Color(0.62, 0.78, 0.95)
-	e.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	e.ambient_light_color = Color(0.75, 0.78, 0.85)
-	e.ambient_light_energy = 0.6
-	env.environment = e
-	add_child(env)
-	var sun := DirectionalLight3D.new()
-	sun.rotation = Vector3(deg_to_rad(-50), deg_to_rad(35), 0)
-	sun.shadow_enabled = true
-	add_child(sun)
-
-	var ground := StaticBody3D.new()
-	var shape := CollisionShape3D.new()
-	var box := BoxShape3D.new()
-	box.size = Vector3(80, 1, 80)
-	shape.shape = box
-	shape.position = Vector3(0, -0.5, 0)
-	ground.add_child(shape)
-	var lawn := MeshInstance3D.new()
-	lawn.mesh = DotPropBodyLook.box(Vector3(80, 1, 80))
-	lawn.material_override = DotPropBodyLook.material(Color(0.45, 0.7, 0.4), 0.95)
-	lawn.position = Vector3(0, -0.5, 0)
-	ground.add_child(lawn)
-	add_child(ground)
+	_build_stage()
 
 	var toys := DotPropBodyBox.new()
 	toys.loose_layer = 2
@@ -107,3 +81,34 @@ func _run() -> void:
 	for line in toys.describe_lines():
 		print(line)
 	get_tree().quit()
+
+
+## The sky, the sun and an 80 m lawn to stand the toys on.
+func _build_stage() -> void:
+	var env := WorldEnvironment.new()
+	var e := Environment.new()
+	e.background_mode = Environment.BG_COLOR
+	e.background_color = Color(0.62, 0.78, 0.95)
+	e.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	e.ambient_light_color = Color(0.75, 0.78, 0.85)
+	e.ambient_light_energy = 0.6
+	env.environment = e
+	add_child(env)
+	var sun := DirectionalLight3D.new()
+	sun.rotation = Vector3(deg_to_rad(-50), deg_to_rad(35), 0)
+	sun.shadow_enabled = true
+	add_child(sun)
+
+	var ground := StaticBody3D.new()
+	var shape := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = Vector3(80, 1, 80)
+	shape.shape = box
+	shape.position = Vector3(0, -0.5, 0)
+	ground.add_child(shape)
+	var lawn := MeshInstance3D.new()
+	lawn.mesh = DotPropBodyLook.box(Vector3(80, 1, 80))
+	lawn.material_override = DotPropBodyLook.material(Color(0.45, 0.7, 0.4), 0.95)
+	lawn.position = Vector3(0, -0.5, 0)
+	ground.add_child(lawn)
+	add_child(ground)
