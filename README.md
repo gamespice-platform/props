@@ -76,7 +76,7 @@ Example: `DOT_PROPS_PER_PLAYER_BUDGET=100 <your server> --props-world-budget=204
 | `group_limits` | none | Per-player counts by `limit_group`, such as `{"vehicles": 4}`. |
 | `world_budget` | 1024 | Props on the server from everybody. 0 = unlimited. |
 | `clean_up_on_leave` | true | Remove a player's props when they leave. |
-| `undo_depth` | 64 | Spawns a player can undo. |
+| `undo_depth` | 64 | Spawns a player can undo. 0 = no undo, -1 = unlimited. |
 | `grab_range` | 40 | Physics gun reach in metres. |
 | `grab_mass_limit` | 0 | Heaviest prop it can hold, in kg. 0 = any. |
 | `hold_distance_min` / `hold_distance_max` | 1.5 / 25 | How near and far a held prop can be. |

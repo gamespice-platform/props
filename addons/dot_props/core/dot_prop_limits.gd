@@ -74,8 +74,13 @@ extends DotConfig
 ## run — and which then needs its own cleanup.
 @export var clean_up_on_leave: bool = true
 
-## How many spawns one player may undo.
-@export_range(0, 500, 1) var undo_depth: int = 64
+## How many spawns one player may undo. 0 = no undo at all (so it cannot also mean
+## unlimited); [constant UNDO_UNLIMITED] (-1) = keep every spawn undoable. Anything
+## below -1 fails [method validate] rather than being clamped.
+@export_range(-1, 500, 1, "or_greater") var undo_depth: int = 64
+
+## The [member undo_depth] value for an undo history with no depth limit.
+const UNDO_UNLIMITED: int = -1
 
 @export_group("Physics")
 
@@ -105,6 +110,13 @@ func cli_prefix() -> String:
 
 
 func validate() -> DotResult:
+	if undo_depth < UNDO_UNLIMITED:
+		return DotResult.fail(
+			DotError.CODE_INVALID,
+			"undo_depth must be 0 (no undo), -1 (unlimited) or a positive depth.",
+			"%d" % undo_depth
+		)
+
 	if hold_distance_min > hold_distance_max:
 		return DotResult.fail(
 			DotError.CODE_INVALID,

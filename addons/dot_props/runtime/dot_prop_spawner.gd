@@ -633,7 +633,8 @@ func player_left(player_id: StringName) -> int:
 
 
 func _trim_undo(player_id: StringName) -> void:
-	if limits == null or limits.undo_depth <= 0:
+	if limits == null or limits.undo_depth < 0:
+		# -1 is DotPropLimits.UNDO_UNLIMITED: the history is never trimmed.
 		return
 
 	var stack: Array = _undo[player_id]

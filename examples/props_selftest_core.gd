@@ -398,6 +398,26 @@ func _test_undo() -> void:
 	_check(not spawner.undo(&"nobody"), "undo for a player with nothing is refused")
 
 	spawner.queue_free()
+
+	# -1 is unlimited: every spawn stays undoable. 0 is no undo. Below -1 is refused.
+	var unlimited := DotPropLimits.new()
+	unlimited.spawn_interval = 0.0
+	unlimited.per_player_budget = 0
+	unlimited.undo_depth = DotPropLimits.UNDO_UNLIMITED
+	_check(unlimited.validate().ok, "undo_depth -1 validates")
+	var sp2 := _spawner(unlimited)
+	for _i in range(100):
+		sp2.spawn(&"crate", &"alice", Vector3.ZERO)
+	var undone := 0
+	while sp2.undo(&"alice"):
+		undone += 1
+	_check(undone == 100, "unlimited undo keeps all 100 spawns undoable", "%d" % undone)
+	sp2.queue_free()
+
+	var bad := DotPropLimits.new()
+	bad.undo_depth = -2
+	_check(not bad.validate().ok, "undo_depth below -1 is refused, not clamped")
+
 	_done()
 
 
