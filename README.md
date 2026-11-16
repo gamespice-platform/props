@@ -57,7 +57,7 @@ A prop's scene is a `RigidBody3D` with no script. Optional fields:
 
 ## Settings
 
-Limits live in a `DotPropLimits` resource, layered like every dot config: inspector defaults, then a JSON file, then environment, then command line.
+Limits live in a `DotPropLimits` resource, layered like every Gamespice config: inspector defaults, then a JSON file, then environment, then command line.
 
 ```gdscript
 var limits := DotPropLimits.new()
