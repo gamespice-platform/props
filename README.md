@@ -65,7 +65,7 @@ limits.load_layered("user://props.json")
 spawner.limits = limits
 ```
 
-Example: `DOT_PROPS_PER_PLAYER_BUDGET=100 <your server> --props-world-budget=2048`.
+Example: `GS_PROPS_PER_PLAYER_BUDGET=100 <your server> --props-world-budget=2048`.
 
 | Setting | Default | Meaning |
 | --- | --- | --- |
