@@ -1,3 +1,5 @@
+[![dot-props - GameSpice addon](docs/banner.png)](https://moddingcommunity.com/a/219-dot-props)
+
 A sandbox for Godot games: players spawn props (crates, furniture, anything with a physics body), move them with a physics gun and a gravity gun, break them, ride on them and wire them together. Props come from a catalogue the operator can edit as JSON.
 
 The server owns every prop and clients only draw what it sends, because physics does not come out identical on two machines. Limits keep a sandbox server alive: per-player budget, spawn delay, frozen-prop limit, undo list, a server-wide limit, and clean-up when a player leaves.
