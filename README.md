@@ -1,4 +1,4 @@
-[![dot-props - GameSpice addon](docs/banner.png)](https://moddingcommunity.com/a/219-dot-props)
+[![Props - GameSpice addon](docs/banner.png)](https://moddingcommunity.com/a/219-dot-props)
 
 A sandbox for Godot games: players spawn props (crates, furniture, anything with a physics body), move them with a physics gun and a gravity gun, break them, ride on them and wire them together. Props come from a catalogue the operator can edit as JSON.
 
