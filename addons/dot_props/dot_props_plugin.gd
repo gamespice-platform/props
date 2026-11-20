@@ -1,7 +1,7 @@
 @tool
 extends EditorPlugin
 
-## Editor entry point for dot-props. Registers inspector types only.
+## Editor entry point for GameSpice Props. Registers inspector types only.
 ##
 ## No autoloads. A server running two sandbox worlds in one process holds two
 ## spawners, each with its own budget.

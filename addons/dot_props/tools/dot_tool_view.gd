@@ -2,7 +2,7 @@ class_name DotToolView
 extends Node3D
 
 ## The first-person model of a held tool or toy (physics gun, launcher, remover), drawn under the camera.
-## It joins `dot_view_model`, so dot-menu's applier hands it `viewmodel_fov` like any other held model.
+## It joins `dot_view_model`, so GameSpice Menu's applier hands it `viewmodel_fov` like any other held model.
 
 const CHANNEL := "props.toolview"
 ## The lens and depth the model is authored at; the same numbers a held weapon model uses.

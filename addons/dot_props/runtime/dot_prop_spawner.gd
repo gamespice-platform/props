@@ -167,7 +167,7 @@ func spawn(
 	# every one of them at the same mass without this line.
 	#
 	# Assigned before the body is in the tree, so the first physics step already sees
-	# it: dot-props' own suite found that a mass set after an impulse divides that
+	# it: GameSpice Props' own suite found that a mass set after an impulse divides that
 	# impulse by the OLD mass, and a prop spawned into a stack is pushed on its first
 	# step.
 	if body is RigidBody3D:

@@ -1,10 +1,10 @@
-# dot-props
+# GameSpice Props
 
 A sandbox layer: spawnable props, the limits that keep a server alive, the tools that move them (a physics gun and a gravity gun), props that break and props a player can ride, props wired to props, the arithmetic of a player hiding as a prop, and a catalogue of toys a map places (balls, swings, see-saws, trampolines, switches).
 
 Read the family [CLAUDE.md](../../CLAUDE.md) first; this file is only what is specific to props. The reasoning is in [docs/](docs/README.md).
 
-**Only dot-core is a dependency.** Combat, netcode, the controller and collision layouts are reached through signals, callables and ids the host wires.
+**Only GameSpice Core is a dependency.** Combat, netcode, the controller and collision layouts are reached through signals, callables and ids the host wires.
 
 ## Read before
 
@@ -58,7 +58,7 @@ Read the family [CLAUDE.md](../../CLAUDE.md) first; this file is only what is sp
 - The physics gun pushes with a velocity, never teleports; `max_speed` is a safety cap; `hold_rotation` is view-relative; freezing zeroes velocities. [tools](docs/tools.md#the-physics-gun-holds-with-a-spring)
 - The static `set_frozen` emits no signal. [tools](docs/tools.md#its-signals)
 - The gravity gun punts with an impulse and refuses a frozen prop. [tools](docs/tools.md#the-gravity-gun-is-not-a-smaller-physics-gun)
-- `DotPropDamage` describes a blast (`exploded`) and shoves only props; dot-combat hurts people. `max_health = 0` is indestructible. [damage-and-carry](docs/damage-and-carry.md#dotpropdamage-holds-the-health-and-applies-none-of-it)
+- `DotPropDamage` describes a blast (`exploded`) and shoves only props; GameSpice Combat hurts people. `max_health = 0` is indestructible. [damage-and-carry](docs/damage-and-carry.md#dotpropdamage-holds-the-health-and-applies-none-of-it)
 - Carry uses the angular velocity too, and `weight_scale` below 1. [damage-and-carry](docs/damage-and-carry.md#a-character-motor-does-not-touch-a-rigid-body)
 - A disguise's hull is computed on both ends from the replicated size, never sent. [hunt](docs/hunt.md#dotpropdisguise)
 - A leant disguise turns about its box's middle and rests on the floor: draw with `model_transform`, hit with `box_transform`, sweep `standing_hull`. [hunt](docs/hunt.md#dotpropdisguise)
@@ -91,7 +91,7 @@ Read the family [CLAUDE.md](../../CLAUDE.md) first; this file is only what is sp
 | Doing something to everything in the world | `DotPropSpawner.all_props`, which hands out a copy |
 | A prop that has code behind it | `DotPropDef.meta`, read on `spawned`. See game-playlot's entities |
 | Buttons, levers, doors | `DotPropIO`, with `outputs` / `inputs` in the definition's meta |
-| What breaks, and what a blast does | `DotPropDef` damage fields; `DotPropDamage.exploded` connected to dot-combat |
+| What breaks, and what a blast does | `DotPropDef` damage fields; `DotPropDamage.exploded` connected to GameSpice Combat |
 | Riding a prop | `DotPropCarry`, fed the motor's `ground_id` |
 | A player disguised as a prop | `DotPropDisguiseRules`, `DotPropDisguise`, `DotPropTaunts` |
 | A prop in a 2D world | `DotPropSpawner.spawn_2d`. See game-hungario |

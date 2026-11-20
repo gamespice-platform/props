@@ -10,7 +10,7 @@ This is also why `authoritative` is checked before anything else in every mutati
 
 ## A definition is checkable without loading the scene
 
-The same reasoning as `DotItem` in dot-loadout and `DotAvatarSchema` in dot-user-avatar: a server validating a spawn against thirty players' budgets cannot load thirty scenes to do it, and a client showing a menu of four hundred props must not load four hundred. So the cost, the category, the entitlement, the mass and the damage numbers are fields, and the scene is fetched only when something is actually created.
+The same reasoning as `DotItem` in GameSpice Loadout and `DotAvatarSchema` in GameSpice User Avatar: a server validating a spawn against thirty players' budgets cannot load thirty scenes to do it, and a client showing a menu of four hundred props must not load four hundred. So the cost, the category, the entitlement, the mass and the damage numbers are fields, and the scene is fetched only when something is actually created.
 
 `cost` is separate from `size` so a server can make one specific prop expensive without reclassifying it, which is what actually happens when one model turns out to be the one everybody spams.
 
@@ -82,9 +82,9 @@ game-playlot's buttons, levers and doors are the first user.
 ## Deliberately not here
 
 - **Replication.** The wire is dot-net's. What a game replicates about a prop (transform only, or transform plus velocity for extrapolation) depends on how many it has and how fast they move.
-- **A spawn menu.** dot-ui has the screen stack; a menu of four hundred props with icons and a search box is a game's own design.
+- **A spawn menu.** GameSpice UI has the screen stack; a menu of four hundred props with icons and a search box is a game's own design.
 - **Duplicating or saving a build.** A save format has to survive the catalogue changing under it, which is a versioning problem rather than a physics one.
-- **Content delivery.** `DotPropDef.content_id` says which pack a prop lives in; mounting it is dot-cloud's and the host's, exactly as `DotMapDef` does it.
+- **Content delivery.** `DotPropDef.content_id` says which pack a prop lives in; mounting it is GameSpice Cloud's and the host's, exactly as `DotMapDef` does it.
 - Welding, ropes and the like: see [tools.md](tools.md#deliberately-not-here). A damage model for people: see [damage-and-carry.md](damage-and-carry.md).
 
 ## Workshop props: `follow_content`

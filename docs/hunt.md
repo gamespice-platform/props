@@ -21,4 +21,4 @@ The noise a hidden player makes: a catalogue (`add_all` from JSON), a cooldown o
 
 It plays nothing: where a sound comes from on every client is the game's replication. Simulated seconds are passed in, never a wall clock.
 
-**Neither is a node, and neither depends on anything but dot-core.**
+**Neither is a node, and neither depends on anything but GameSpice Core.**

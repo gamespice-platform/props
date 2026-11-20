@@ -5,7 +5,7 @@ extends Node
 ##
 ## [b]Health lives here and not on the prop's scene.[/b] A prop in this addon is a
 ## plain scene with a [RigidBody3D] at its root — that is what makes one droppable,
-## what lets a dot-cloud pack ship one, and what
+## what lets a GameSpice Cloud pack ship one, and what
 ## [method DotPropSpawner.spawn] assumes. Putting hit points on the node would mean
 ## every breakable prop needs a script, every such script needs to resolve
 ## [code]class_name[/code] at load, and a delivered pack cannot do that: this family
@@ -13,7 +13,7 @@ extends Node
 ## numbers are on [DotPropDef], which is a document, and the state is here, keyed by
 ## the instance id the spawner already hands out.
 ##
-## [b]It deals no damage to anybody.[/b] dot-combat owns the damage model — hit groups,
+## [b]It deals no damage to anybody.[/b] GameSpice Combat owns the damage model — hit groups,
 ## armour, team scales, falloff — and a second one inside a prop addon would be a
 ## second set of rules about who a blast hurts. When a barrel goes off this emits
 ## [signal exploded] describing the blast and stops; the game hands that to

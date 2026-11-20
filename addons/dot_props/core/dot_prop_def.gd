@@ -12,8 +12,8 @@ extends Resource
 ## thirty players' budgets cannot load thirty scenes to do it, and a client showing a
 ## spawn menu of four hundred props must not load four hundred.
 ##
-## The same reasoning as [code]DotItem[/code] in dot-loadout and
-## [code]DotAvatarSchema[/code] in dot-user-avatar: the document is checkable on its
+## The same reasoning as [code]DotItem[/code] in GameSpice Loadout and
+## [code]DotAvatarSchema[/code] in GameSpice User Avatar: the document is checkable on its
 ## own, and the content is fetched only when something is actually created.
 
 ## Rough size, which is what a spawn budget is really about.
@@ -61,11 +61,11 @@ enum Size {
 
 ## The scene instantiated on spawn.
 ##
-## May live inside a dot-cloud pack, in which case the pack must be mounted first —
+## May live inside a GameSpice Cloud pack, in which case the pack must be mounted first —
 ## which is the game's business, not this addon's. See [DotPropSpawner].
 @export var scene_path: String = ""
 
-## The dot-cloud content id this prop lives in, or empty when it ships in the build.
+## The GameSpice Cloud content id this prop lives in, or empty when it ships in the build.
 @export var content_id: StringName = &""
 
 @export_group("Simulation")
@@ -117,13 +117,13 @@ enum Size {
 ## thing that separates those is closing speed rather than accumulated damage.
 @export_range(0.0, 1000.0, 0.5) var break_impact_speed: float = 0.0
 
-## What the prop is made of: glass, wood, metal, stone or plastic. Break effects (dot-fx's DotFxBreak) key on it.
+## What the prop is made of: glass, wood, metal, stone or plastic. Break effects (GameSpice FX's DotFxBreak) key on it.
 @export var material: StringName = &"wood"
 
 ## Radius in metres of the explosion this prop makes when it breaks. Zero for none.
 ##
 ## [b]This addon does not explode anything.[/b] It has no damage model and must not
-## grow one — dot-combat already owns that, and a second one would be a second set of
+## grow one — GameSpice Combat already owns that, and a second one would be a second set of
 ## rules about who a blast hurts. What these three fields are is a [i]description[/i]
 ## of a blast, emitted on [signal DotPropDamage.exploded] for a game to hand to
 ## [code]DotCombatManager.explode[/code]. The prop knows it is a barrel; only the game
@@ -147,7 +147,7 @@ enum Size {
 
 ## An entitlement id the player must hold, or empty for anybody.
 ##
-## Checked by the host against whatever it uses for entitlements — dot-platform's
+## Checked by the host against whatever it uses for entitlements — GameSpice Platform's
 ## source, a group on the site, an admin flag. This addon does not know what an
 ## entitlement is; it knows that a prop can require one.
 @export var entitlement: StringName = &""

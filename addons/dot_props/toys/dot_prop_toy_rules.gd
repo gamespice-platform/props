@@ -6,8 +6,8 @@ extends Resource
 ## names stay as deprecated aliases (a saved config or a console script that sets them still works).
 ##
 ## [b]REPLICATED[/b] when a game binds them (the client hides the toys the server took away),
-## and followed through the link like dot-player-char's ragdoll rules, duck-typed the same
-## way: dot-server is not a dependency here.
+## and followed through the link like GameSpice Player Char's ragdoll rules, duck-typed the same
+## way: GameSpice Server is not a dependency here.
 
 const CVAR_ENABLED := "sv_physprops"
 const CVAR_AWAKE := "sv_physprops_awake"
@@ -97,7 +97,7 @@ func bind_cvars(add: Callable, flags: int = 0) -> Array:
 	return made
 
 
-## Keeps these rules on a server's values as [param source] (dot-server's `DotClientLink`)
+## Keeps these rules on a server's values as [param source] (GameSpice Server's `DotClientLink`)
 ## reports them. False when it cannot (an older shell's link).
 func follow_cvars(source: Object) -> bool:
 	if source == null or not is_instance_valid(source):

@@ -43,7 +43,7 @@ extends RefCounted
 ## [b]The result is a [DotPropDef][/b] whose [member DotPropDef.scene_path] is the game's own
 ## body scene (the host passes it), and whose [member DotPropDef.meta] carries [code]model[/code]
 ## (the file), [code]model_scale[/code], [code]shape[/code], [code]extent[/code] and [code]credit[/code]. What a
-## body does with those is [DotPropModel] and the game's. dot-props does not know which
+## body does with those is [DotPropModel] and the game's. GameSpice Props does not know which
 ## scene a game builds bodies from.
 
 const CHANNEL := "props.folder"

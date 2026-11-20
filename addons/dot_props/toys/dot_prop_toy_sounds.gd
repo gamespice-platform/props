@@ -5,9 +5,9 @@ extends RefCounted
 ## definitions. Kenney's CC0 impact, interface and foley sounds plus a horn made here, shipped in
 ## [code]toys/sounds/[/code] (credited in its CREDITS.md).
 ##
-## [b]Data, not dot-audio definitions[/b], because this addon does not depend on dot-audio: a
+## [b]Data, not GameSpice Audio definitions[/b], because this addon does not depend on GameSpice Audio: a
 ## game makes one positional definition per row (path, variants, pitch range, gain), and the ids
-## a [DotPropBody] emits then play. The same shape as dot-player-char's death sounds.
+## a [DotPropBody] emits then play. The same shape as GameSpice Player Char's death sounds.
 
 const BOUNCE := &"toy_bounce"
 const THUMP := &"toy_thump"

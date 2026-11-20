@@ -6,7 +6,7 @@
 
 ## Placed by data, paired by index
 
-A map lists `{"toy": "<id>", "at": [x, y, z], "yaw": deg}` (plus `links` for a switch, `on` for a lamp or a fountain). `DotPropBodyBox.normal_placement` is the format and `DotPropBodyBox.build` builds them in order. **Both ends build the same toys in the same order from the same document**, so a toy's index is the same on every machine, and a game pairs its replicated entity with a toy by index alone: game-hide-n-seek's `TOYS` event carries only the net ids, in toy order. An id the catalogue does not have is left out and listed in `missing`, so a map written for a newer dot-props still plays.
+A map lists `{"toy": "<id>", "at": [x, y, z], "yaw": deg}` (plus `links` for a switch, `on` for a lamp or a fountain). `DotPropBodyBox.normal_placement` is the format and `DotPropBodyBox.build` builds them in order. **Both ends build the same toys in the same order from the same document**, so a toy's index is the same on every machine, and a game pairs its replicated entity with a toy by index alone: game-hide-n-seek's `TOYS` event carries only the net ids, in toy order. An id the catalogue does not have is left out and listed in `missing`, so a map written for a newer GameSpice Props still plays.
 
 ## The kinds, and why there are few
 
@@ -53,7 +53,7 @@ A trampoline or a pad throwing a person is `launch_for(feet, velocity)`: a pure 
 
 ## Sounds
 
-`DotPropBodySounds.rows()` is the data a game turns into its own audio definitions, like dot-player-char's death sounds: Kenney's CC0 impacts, a switch click, water, a boing, a bell, and a horn made for this addon (`toys/sounds/CREDITS.md`).
+`DotPropBodySounds.rows()` is the data a game turns into its own audio definitions, like GameSpice Player Char's death sounds: Kenney's CC0 impacts, a switch click, water, a boing, a bell, and a horn made for this addon (`toys/sounds/CREDITS.md`).
 
 ## Testing
 

@@ -9,7 +9,7 @@ extends "dot_prop_toy_parts.gd"
 ## a real [RigidBody3D] (with its joint or its axis locks); on a client it is the same body
 ## frozen kinematic and posed from the replicated state ([method show_state]), so a person
 ## standing on a see-saw on a client stands on the plank the server tipped. Godot's rigid-body
-## solver is not the same on two machines, so nothing here is predicted (dot-props'
+## solver is not the same on two machines, so nothing here is predicted (GameSpice Props'
 ## spawning.md).
 ##
 ## [b]A person is not a rigid body.[/b] A character motor slides along a rigid body without

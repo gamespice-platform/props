@@ -10,7 +10,7 @@ extends Node3D
 ## toys in the same order from it, so a toy's index is the same on every machine and is all a
 ## game needs to pair a replicated entity with it ([method normal_placement] is the format).
 ##
-## [b]What the game wires[/b], because this addon depends on dot-core alone:
+## [b]What the game wires[/b], because this addon depends on GameSpice Core alone:
 ## - the collision bits ([member loose_layer] and the rest), from its own layout;
 ## - every tick on the server: [method advance], [method push_from] and [method stand_on] for
 ##   each person, [method use] when the use key goes down on one ([method aimed] finds it);

@@ -1,4 +1,4 @@
-# dot-props docs
+# GameSpice Props docs
 
 The reasoning behind the sandbox layer, one subject per file. [CLAUDE.md](../CLAUDE.md) has the short rules; these say why.
 
