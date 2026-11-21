@@ -493,7 +493,7 @@ func _test_tool_view() -> void:
 	cam.fov = 75.0
 	_world.add_child(cam)
 	var view := GSToolView.make(Color(0.9, 0.5, 0.2), false, cam)
-	_check(view.get_parent() == cam and view.is_in_group(&"dot_view_model"), "it sits under the camera and joins dot_view_model")
+	_check(view.get_parent() == cam and view.is_in_group(&"gs_view_model"), "it sits under the camera and joins gs_view_model")
 	view._process(0.016)
 	_check(view.scale == Vector3.ONE and view.position == Vector3.ZERO, "with no hands_fov it is drawn under the camera's own lens")
 	view.set_hands_fov_at_4_3(40.0)

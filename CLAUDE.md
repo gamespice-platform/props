@@ -24,11 +24,11 @@ Read the family [CLAUDE.md](../../CLAUDE.md) first; this file is only what is sp
 
 | Path | What |
 | --- | --- |
-| `addons/dot_props/core/` | `GSPropDef` (scene, size, mass, cost, entitlement, damage numbers), `GSPropInstance`, `GSPropCatalogue` (the JSON an operator edits), `GSPropLimits` (a layered `GSConfig`), `GSPropPieces` (collision shaped like the model), `GSPropModel` (measure a model into an extent and one convex hull), `GSPropFolder` (a folder of models into a catalogue) |
-| `addons/dot_props/runtime/` | `GSPropSpawner` (the node a game adds), `GSPropDamage`, `GSPropCarry`, `GSPropIO`; road hazards `GSPropBridge` (a deck that sags and falls, with a mirror mode), `GSPropRubble`, `GSPropLedge` (a rock outcrop pinching a road to a ledge) |
-| `addons/dot_props/hunt/` | `GSPropDisguiseRules`, `GSPropDisguise`, `GSPropTaunts` |
-| `addons/dot_props/tools/` | `GSPropTool` (reach, targeting, `may_act_on`), `GSPhysGun`, `GSGravGun`, `GSToolView` (the first-person model of a held tool or toy, API 8) |
-| `addons/dot_props/toys/` | `GSPropBodyCatalogue` (18 stock toys over 16 kinds, retuned from JSON), `GSPropBodyBox` (a map's toys, the awake cap, push/stand/use/hit/launch), `GSPropBody` (one, its bodies and look; the per-kind builders are its base script `dot_prop_toy_parts.gd`, no `class_name`), `GSPropBodyRules` (`sv_physprops*` (`sv_toys*` kept as aliases)), `GSPropBodySounds` (+ `sounds/`, CC0), `GSPropBodyLook` (code meshes, plus optional glb looks from `toys/models/`, built by `art-src/build_toy_models.py`) |
+| `addons/gs_props/core/` | `GSPropDef` (scene, size, mass, cost, entitlement, damage numbers), `GSPropInstance`, `GSPropCatalogue` (the JSON an operator edits), `GSPropLimits` (a layered `GSConfig`), `GSPropPieces` (collision shaped like the model), `GSPropModel` (measure a model into an extent and one convex hull), `GSPropFolder` (a folder of models into a catalogue) |
+| `addons/gs_props/runtime/` | `GSPropSpawner` (the node a game adds), `GSPropDamage`, `GSPropCarry`, `GSPropIO`; road hazards `GSPropBridge` (a deck that sags and falls, with a mirror mode), `GSPropRubble`, `GSPropLedge` (a rock outcrop pinching a road to a ledge) |
+| `addons/gs_props/hunt/` | `GSPropDisguiseRules`, `GSPropDisguise`, `GSPropTaunts` |
+| `addons/gs_props/tools/` | `GSPropTool` (reach, targeting, `may_act_on`), `GSPhysGun`, `GSGravGun`, `GSToolView` (the first-person model of a held tool or toy, API 8) |
+| `addons/gs_props/toys/` | `GSPropBodyCatalogue` (18 stock toys over 16 kinds, retuned from JSON), `GSPropBodyBox` (a map's toys, the awake cap, push/stand/use/hit/launch), `GSPropBody` (one, its bodies and look; the per-kind builders are its base script `gs_prop_toy_parts.gd`, no `class_name`), `GSPropBodyRules` (`sv_physprops*` (`sv_toys*` kept as aliases)), `GSPropBodySounds` (+ `sounds/`, CC0), `GSPropBodyLook` (code meshes, plus optional glb looks from `toys/models/`, built by `art-src/build_toy_models.py`) |
 | `fixtures/` | 3D and 2D prop bodies for the suite |
 | `examples/props_selftest.tscn` | the suite; spawns real `RigidBody3D`s into a real tree and checks every node is freed |
 | `examples/toy_gallery.tscn` | every stock toy rendered on a lawn (xvfb; `--kick` shows them moving) |
@@ -58,10 +58,10 @@ Read the family [CLAUDE.md](../../CLAUDE.md) first; this file is only what is sp
 - The physics gun pushes with a velocity, never teleports; `max_speed` is a safety cap; `hold_rotation` is view-relative; freezing zeroes velocities. [tools](docs/tools.md#the-physics-gun-holds-with-a-spring)
 - The static `set_frozen` emits no signal. [tools](docs/tools.md#its-signals)
 - The gravity gun punts with an impulse and refuses a frozen prop. [tools](docs/tools.md#the-gravity-gun-is-not-a-smaller-physics-gun)
-- `GSPropDamage` describes a blast (`exploded`) and shoves only props; GameSpice Combat hurts people. `max_health = 0` is indestructible. [damage-and-carry](docs/damage-and-carry.md#dotpropdamage-holds-the-health-and-applies-none-of-it)
+- `GSPropDamage` describes a blast (`exploded`) and shoves only props; GameSpice Combat hurts people. `max_health = 0` is indestructible. [damage-and-carry](docs/damage-and-carry.md#gspropdamage-holds-the-health-and-applies-none-of-it)
 - Carry uses the angular velocity too, and `weight_scale` below 1. [damage-and-carry](docs/damage-and-carry.md#a-character-motor-does-not-touch-a-rigid-body)
-- A disguise's hull is computed on both ends from the replicated size, never sent. [hunt](docs/hunt.md#dotpropdisguise)
-- A leant disguise turns about its box's middle and rests on the floor: draw with `model_transform`, hit with `box_transform`, sweep `standing_hull`. [hunt](docs/hunt.md#dotpropdisguise)
+- A disguise's hull is computed on both ends from the replicated size, never sent. [hunt](docs/hunt.md#gspropdisguise)
+- A leant disguise turns about its box's middle and rests on the floor: draw with `model_transform`, hit with `box_transform`, sweep `standing_hull`. [hunt](docs/hunt.md#gspropdisguise)
 - **Toys are placed by data and paired by index**: both ends build the same toys in the same order from the map, so a game replicates each by index (its state is `state_transform()`, `on`, `count`) and never sends what a toy is. [toys](docs/toys.md#placed-by-data-paired-by-index)
 - A loose toy is on a layer people do not collide with and is pushed by the game's `push_from`; a person standing on a see-saw is `stand_on`. A character motor never moves a rigid body. [toys](docs/toys.md#three-kinds-of-motion)
 - A swing, a bag, a see-saw, a platform and a roundabout are driven angles posing a kinematic body, never Godot joints (a hinge pushed off its axis blew a seat a thousand kilometres away). [toys](docs/toys.md#three-kinds-of-motion)

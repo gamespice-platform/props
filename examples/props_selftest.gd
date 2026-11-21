@@ -28,7 +28,7 @@ func _ready() -> void:
 
 
 func _run() -> void:
-	print("dot-props self-test")
+	print("gs-props self-test")
 	print("")
 
 	_world = Node3D.new()

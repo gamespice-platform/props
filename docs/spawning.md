@@ -81,7 +81,7 @@ game-playlot's buttons, levers and doors are the first user.
 
 ## Deliberately not here
 
-- **Replication.** The wire is dot-net's. What a game replicates about a prop (transform only, or transform plus velocity for extrapolation) depends on how many it has and how fast they move.
+- **Replication.** The wire is gs-net's. What a game replicates about a prop (transform only, or transform plus velocity for extrapolation) depends on how many it has and how fast they move.
 - **A spawn menu.** GameSpice UI has the screen stack; a menu of four hundred props with icons and a search box is a game's own design.
 - **Duplicating or saving a build.** A save format has to survive the catalogue changing under it, which is a versioning problem rather than a physics one.
 - **Content delivery.** `GSPropDef.content_id` says which pack a prop lives in; mounting it is GameSpice Cloud's and the host's, exactly as `GSMapDef` does it.

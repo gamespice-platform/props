@@ -36,7 +36,7 @@ A frozen prop is **refused** by the gravity gun rather than thawed. The physics 
 
 ## The held model is `GSToolView`
 
-A `Node3D` a game puts under the camera (`GSToolView.make(colour, domed, camera)`), in the `dot_view_model` group so GameSpice Menu's `viewmodel_fov` reaches it, with a short `kick()`. It scales to the field of view with GameSpice Core's `GSViewLens` (API 25, the same maths a held weapon model uses; GameSpice Props needs GameSpice Core 25 for it) and carries no scene path: `camera_ref` (a `GSNodeRef`) names the camera, and empty means the parent. A tool is not a node, so the game owns when to build and free it and when to hide it (outside first person).
+A `Node3D` a game puts under the camera (`GSToolView.make(colour, domed, camera)`), in the `gs_view_model` group so GameSpice Menu's `viewmodel_fov` reaches it, with a short `kick()`. It scales to the field of view with GameSpice Core's `GSViewLens` (API 25, the same maths a held weapon model uses; GameSpice Props needs GameSpice Core 25 for it) and carries no scene path: `camera_ref` (a `GSNodeRef`) names the camera, and empty means the parent. A tool is not a node, so the game owns when to build and free it and when to hide it (outside first person).
 
 ## Deliberately not here
 
