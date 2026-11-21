@@ -10,7 +10,7 @@ const _ICON := "res://addons/dot_props/icon_placeholder.svg"
 
 const _TYPES := [
 	[
-		"DotPropSpawner",
+		"GSPropSpawner",
 		"Node",
 		"res://addons/dot_props/runtime/dot_prop_spawner.gd",
 	],

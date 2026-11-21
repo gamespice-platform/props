@@ -1,4 +1,4 @@
-class_name DotPropTool
+class_name GSPropTool
 extends RefCounted
 
 ## What a tool that acts on props has in common: a reach, a target, and a holder.
@@ -8,7 +8,7 @@ extends RefCounted
 ## for a player with a first-person camera, for a bot, for a replay being played back,
 ## and for a headless test, none of which have a viewport.
 ##
-## Subclasses: [DotPhysGun], [DotGravGun].
+## Subclasses: [GSPhysGun], [GSGravGun].
 
 # No log channel: per-tick targeting for whoever holds the tool. A refusal (not yours,
 # too heavy, somebody else is holding it) goes back to that player, and a line per
@@ -16,7 +16,7 @@ extends RefCounted
 # (phys gun, grav gun, a game's weapon) used it either.
 
 ## The spawner that owns the props this tool acts on.
-var spawner: DotPropSpawner = null
+var spawner: GSPropSpawner = null
 
 ## Who is holding the tool. Used for permission and for the one-holder rule.
 var wielder: StringName = &""
@@ -45,7 +45,7 @@ func target(
 	origin: Vector3,
 	direction: Vector3,
 	mask: int = 0xFFFFFFFF
-) -> DotPropInstance:
+) -> GSPropInstance:
 	if space == null or spawner == null:
 		return null
 
@@ -69,43 +69,43 @@ func target(
 ## somebody else's crate is a server policy — a build server says no, a sandbox says
 ## yes, a competitive one says only for admins — and hard-coding either answer means
 ## the other needs a fork. The host passes [param can_touch_others].
-func may_act_on(prop: DotPropInstance, can_touch_others: bool = true) -> DotResult:
+func may_act_on(prop: GSPropInstance, can_touch_others: bool = true) -> GSResult:
 	if prop == null or not prop.is_alive():
-		return DotResult.fail(DotError.CODE_STATE, "Nothing there.")
+		return GSResult.fail(GSError.CODE_STATE, "Nothing there.")
 
 	if prop.def == null or not prop.def.can_grab:
-		return DotResult.fail(
-			DotError.CODE_FORBIDDEN, "That cannot be picked up."
+		return GSResult.fail(
+			GSError.CODE_FORBIDDEN, "That cannot be picked up."
 		)
 
 	if prop.is_held() and prop.held_by != wielder:
 		# One holder at a time. Two guns pulling one crate toward two players makes
 		# it oscillate violently between them and costs ten times the physics step.
-		return DotResult.fail(
-			DotError.CODE_STATE, "Somebody else is holding that."
+		return GSResult.fail(
+			GSError.CODE_STATE, "Somebody else is holding that."
 		)
 
 	if spawner != null and not spawner.may_act_for(prop, wielder):
-		return DotResult.fail(
-			DotError.CODE_FORBIDDEN, "Its owner has protected it."
+		return GSResult.fail(
+			GSError.CODE_FORBIDDEN, "Its owner has protected it."
 		)
 
 	if not can_touch_others and prop.owner_id != wielder:
-		return DotResult.fail(
-			DotError.CODE_FORBIDDEN, "That is not yours."
+		return GSResult.fail(
+			GSError.CODE_FORBIDDEN, "That is not yours."
 		)
 
 	if spawner != null and spawner.limits != null:
 		var cap := spawner.limits.grab_mass_limit
 
 		if cap > 0.0 and prop.def.mass > cap:
-			return DotResult.fail(
-				DotError.CODE_FORBIDDEN,
+			return GSResult.fail(
+				GSError.CODE_FORBIDDEN,
 				"That is too heavy.",
 				"%.0f kg, limit %.0f kg" % [prop.def.mass, cap]
 			)
 
-	return DotResult.success(prop)
+	return GSResult.success(prop)
 
 
 func describe() -> Dictionary:

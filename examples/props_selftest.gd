@@ -23,7 +23,7 @@ const SECTIONS := 45
 
 
 func _ready() -> void:
-	DotLog.set_level(DotLog.Level.ERROR)
+	GSLog.set_level(GSLog.Level.ERROR)
 	_run.call_deferred()
 
 
@@ -129,8 +129,8 @@ func _test_prop_folder() -> void:
 	side.store_string('{"name": "Crate thing", "category": "Boxes", "mass": 9, "scale": 2, "icon": "../x.png"}')
 	side.close()
 
-	var catalogue := DotPropCatalogue.new()
-	var res := DotPropFolder.load_into(catalogue, dir, "res://x.tscn")
+	var catalogue := GSPropCatalogue.new()
+	var res := GSPropFolder.load_into(catalogue, dir, "res://x.tscn")
 	_check(res.ok, "a folder reads", "" if res.ok else res.error.message)
 
 	var def := catalogue.get_prop(&"crate_thing")
@@ -146,14 +146,14 @@ func _test_prop_folder() -> void:
 	_check(def != null and def.icon_path == "", "an icon cannot point out of the folder")
 	_check(catalogue.has(&"nope_id"), "an id is made of lower-case words, whatever the file is called")
 
-	var again := DotPropFolder.load_into(catalogue, dir, "res://x.tscn")
+	var again := GSPropFolder.load_into(catalogue, dir, "res://x.tscn")
 	_check((again.value as Dictionary)["added"].is_empty(), "reading again adds nothing and replaces nothing")
-	_check(DotPropFolder.load_into(catalogue, "user://no_such_folder_here", "res://x.tscn").ok, "a missing folder is not a problem")
+	_check(GSPropFolder.load_into(catalogue, "user://no_such_folder_here", "res://x.tscn").ok, "a missing folder is not a problem")
 
-	var measured := DotPropModel.measure(dir + "/crate_thing.glb", 1.0, "box")
+	var measured := GSPropModel.measure(dir + "/crate_thing.glb", 1.0, "box")
 	_check(measured.ok and (measured.value as Dictionary)["shape"] is Shape3D, "a model is measured into a shape")
-	_check(not DotPropModel.measure(dir + "/missing.glb", 1.0).ok, "a missing model is an error, not a null")
-	_check(DotPropFolder.sanitize_id("../../a/B c") == "a_b_c", "an id never carries a path")
+	_check(not GSPropModel.measure(dir + "/missing.glb", 1.0).ok, "a missing model is an error, not a null")
+	_check(GSPropFolder.sanitize_id("../../a/B c") == "a_b_c", "an id never carries a path")
 
 	_done()
 
@@ -161,12 +161,12 @@ func _test_prop_folder() -> void:
 func _test_clear_cache() -> void:
 	_section("clear_cache drops the shared materials")
 
-	var first := DotPropBodyLook.material(Color.RED)
-	_check(DotPropBodyLook.material(Color.RED) == first, "a colour is built once")
-	DotPropBodyLook.clear_cache()
-	DotPropModel.clear_cache()
-	_check(DotPropBodyLook.material(Color.RED) != first, "after clear_cache it is built again")
-	_check(DotPropBodyLook.material(Color.RED) is StandardMaterial3D, "and still usable")
+	var first := GSPropBodyLook.material(Color.RED)
+	_check(GSPropBodyLook.material(Color.RED) == first, "a colour is built once")
+	GSPropBodyLook.clear_cache()
+	GSPropModel.clear_cache()
+	_check(GSPropBodyLook.material(Color.RED) != first, "after clear_cache it is built again")
+	_check(GSPropBodyLook.material(Color.RED) is StandardMaterial3D, "and still usable")
 
 	_done()
 
@@ -174,8 +174,8 @@ func _test_clear_cache() -> void:
 func _test_workshop_props() -> void:
 	_section("Workshop props follow the content index")
 
-	var index := DotContentIndex.new()
-	index.set_session(DotContentIndex.SESSION_SOLO)
+	var index := GSContentIndex.new()
+	index.set_session(GSContentIndex.SESSION_SOLO)
 	var catalogue := _catalogue()
 	var own := catalogue.size()
 	var changes := [0]
@@ -186,7 +186,7 @@ func _test_workshop_props() -> void:
 	# A def the pack ships, read from a directory standing in for the mount.
 	var dir := "user://ws_props_test"
 	DirAccess.make_dir_recursive_absolute(dir)
-	var shipped := DotPropDef.new()
+	var shipped := GSPropDef.new()
 	shipped.id = &"ignored_id"
 	shipped.display_name = "Shipped"
 	shipped.scene_path = "res://fixtures/prop_body.tscn"
@@ -219,7 +219,7 @@ func _test_workshop_props() -> void:
 		"a pack prop under an id the game holds does not replace it")
 	catalogue.refresh_content()
 	_check(not catalogue.get_prop(&"crate").meta.has("entry_key"), "and a refresh does not either")
-	catalogue.add(DotPropDef.make(&"pack_rock", "res://fixtures/prop_body.tscn"))
+	catalogue.add(GSPropDef.make(&"pack_rock", "res://fixtures/prop_body.tscn"))
 	catalogue.refresh_content()
 	_check(not catalogue.get_prop(&"pack_rock").meta.has("entry_key"),
 		"an id the game takes over later is the game's, kept by the refresh")
@@ -228,16 +228,16 @@ func _test_workshop_props() -> void:
 		"saving the catalogue leaves pack rows out", str(saved.size()))
 
 	# Remove: online hides, solo restores.
-	index.set_session(DotContentIndex.SESSION_ONLINE)
+	index.set_session(GSContentIndex.SESSION_ONLINE)
 	_check(catalogue.get_prop(&"pack_def") == null and catalogue.size() == own + 1,
 		"online shows no subscribed prop and keeps the game's own", str(catalogue.size()))
-	index.set_session(DotContentIndex.SESSION_SOLO)
+	index.set_session(GSContentIndex.SESSION_SOLO)
 	_check(catalogue.get_prop(&"pack_def") != null, "solo again brings it back")
-	index.tag_pack(&"alice/props", "1.0.0", DotContentIndex.SESSION_ONLINE)
-	index.set_session(DotContentIndex.SESSION_ONLINE)
+	index.tag_pack(&"alice/props", "1.0.0", GSContentIndex.SESSION_ONLINE)
+	index.set_session(GSContentIndex.SESSION_ONLINE)
 	catalogue.refresh_content()
 	_check(catalogue.get_prop(&"pack_def") != null, "a pack the server also requires shows online")
-	index.set_session(DotContentIndex.SESSION_SOLO)
+	index.set_session(GSContentIndex.SESSION_SOLO)
 
 	# A catalogue following nothing, and one that stopped.
 	var none := _catalogue()
@@ -259,13 +259,13 @@ func _test_workshop_props() -> void:
 func _test_ledge() -> void:
 	_section("ledge")
 	var material := StandardMaterial3D.new()
-	var right := DotPropLedge.make(8.0, 3.0, 20.0, 3.5, 1.0, 7, material)
-	var left := DotPropLedge.make(8.0, 3.0, 20.0, 3.5, -1.0, 7, material)
+	var right := GSPropLedge.make(8.0, 3.0, 20.0, 3.5, 1.0, 7, material)
+	var left := GSPropLedge.make(8.0, 3.0, 20.0, 3.5, -1.0, 7, material)
 	var points: PackedVector3Array = ((right.get_child(0) as CollisionShape3D).shape as ConvexPolygonShape3D).points
 	var lo := INF
 	for p: Vector3 in points:
 		lo = minf(lo, p.x)
-	_check(is_equal_approx(lo, 1.0) and is_equal_approx(DotPropLedge.clear_width(8.0, 3.0), 5.0),
+	_check(is_equal_approx(lo, 1.0) and is_equal_approx(GSPropLedge.clear_width(8.0, 3.0), 5.0),
 		"a right ledge's face is 3 m in from the edge, leaving 5 m", "face at x=%.2f" % lo)
 	var hi := -INF
 	for p: Vector3 in ((left.get_child(0) as CollisionShape3D).shape as ConvexPolygonShape3D).points:

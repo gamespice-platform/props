@@ -1,4 +1,4 @@
-class_name DotPropRubble
+class_name GSPropRubble
 extends StaticBody3D
 
 ## A heap of fallen rock across part of a road: a bump, never a wall. Build it with
@@ -10,8 +10,8 @@ var height: float = 0.5
 
 ## A heap [param width] across and [param length] along, seeded so every machine builds the
 ## same one. [param material] is the rock look; [param layers] the collision layer bits.
-static func make(width: float, length: float, height_m: float, seed_value: int, material: Material, layers: int = 1) -> DotPropRubble:
-	var heap := DotPropRubble.new()
+static func make(width: float, length: float, height_m: float, seed_value: int, material: Material, layers: int = 1) -> GSPropRubble:
+	var heap := GSPropRubble.new()
 	heap.name = "Rubble"
 	heap.height = height_m
 	heap.collision_layer = layers

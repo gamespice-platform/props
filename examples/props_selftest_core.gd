@@ -6,30 +6,30 @@ extends "props_selftest_base.gd"
 func _test_definitions() -> void:
 	_section("prop definitions")
 
-	var crate := DotPropDef.make(&"crate", "res://fixtures/prop_body.tscn")
+	var crate := GSPropDef.make(&"crate", "res://fixtures/prop_body.tscn")
 	_check(crate.validate().ok, "a prop validates")
 	_check(crate.is_local(), "and ships in the build when it has no content id")
 
-	var nameless := DotPropDef.new()
+	var nameless := GSPropDef.new()
 	_check(not nameless.validate().ok, "a prop with no id is refused")
 
-	var sceneless := DotPropDef.new()
+	var sceneless := GSPropDef.new()
 	sceneless.id = &"x"
 	_check(not sceneless.validate().ok, "and one with no scene")
 
-	var back := DotPropDef.from_dictionary(crate.to_dictionary())
+	var back := GSPropDef.from_dictionary(crate.to_dictionary())
 	_check(back.id == crate.id and back.mass == crate.mass, "a prop round-trips")
 
-	var junk := DotPropDef.from_dictionary({
+	var junk := GSPropDef.from_dictionary({
 		"id": "x", "scene": "y", "size": 99, "mass": -5, "cost": 5000,
 	})
-	_check(junk.size == DotPropDef.Size.MEDIUM, "an out-of-range size falls back")
+	_check(junk.size == GSPropDef.Size.MEDIUM, "an out-of-range size falls back")
 	_check(junk.mass > 0.0, "a negative mass is clamped")
 	_check(junk.cost <= 100, "and a huge cost")
 
 	# The aliasing check the leaderboard suite taught us to write.
 	crate.meta["a"] = 1
-	var copy := DotPropDef.from_dictionary(crate.to_dictionary())
+	var copy := GSPropDef.from_dictionary(crate.to_dictionary())
 	copy.meta["a"] = 2
 	_check(int(crate.meta["a"]) == 1, "and a copy does not share its meta dictionary")
 	_done()
@@ -53,11 +53,11 @@ func _test_catalogue() -> void:
 	_check(partial.size() == 2, "while a partial finds both crates",
 		"%d" % partial.size())
 
-	var parsed := DotPropCatalogue.from_json(catalogue.to_json())
-	_check(parsed.ok and (parsed.value as DotPropCatalogue).size() == 5,
+	var parsed := GSPropCatalogue.from_json(catalogue.to_json())
+	_check(parsed.ok and (parsed.value as GSPropCatalogue).size() == 5,
 		"and the catalogue round-trips")
 
-	var tolerant := DotPropCatalogue.from_dictionary({
+	var tolerant := GSPropCatalogue.from_dictionary({
 		"format": 1,
 		"props": [
 			{"id": "good", "scene": "a.tscn"},
@@ -66,7 +66,7 @@ func _test_catalogue() -> void:
 		],
 	})
 	_check(
-		tolerant.ok and (tolerant.value as DotPropCatalogue).size() == 2,
+		tolerant.ok and (tolerant.value as GSPropCatalogue).size() == 2,
 		"one bad entry does not condemn the file"
 	)
 	_done()
@@ -106,7 +106,7 @@ func _test_spawning() -> void:
 	_check(granted != null, "and one they hold allows it")
 
 	# The definition's mass reaches the body: a 900 kg `safe` among 20 kg scenes is the evidence
-	# that `DotPropDef.mass` is simulated, not just compared against `grab_mass_limit`.
+	# that `GSPropDef.mass` is simulated, not just compared against `grab_mass_limit`.
 	var safe := spawner.spawn(&"safe", &"alice", Vector3(0.0, 9.0, 0.0))
 
 	_check(
@@ -136,14 +136,14 @@ func _test_spawning_2d() -> void:
 	var world_2d := Node2D.new()
 	_world.add_child(world_2d)
 
-	var spawner := DotPropSpawner.new()
+	var spawner := GSPropSpawner.new()
 	spawner.catalogue = _catalogue()
-	spawner.limits = DotPropLimits.new()
+	spawner.limits = GSPropLimits.new()
 	spawner.limits.spawn_interval = 0.0
 	spawner.authoritative = true
 	# The props go into the 2D world rather than under the spawner, which is a plain
 	# Node and would give them no transform of their own to be placed in.
-	spawner.world_ref = DotNodeRef.of_path(^"..")
+	spawner.world_ref = GSNodeRef.of_path(^"..")
 	world_2d.add_child(spawner)
 
 	var bench := spawner.spawn_2d(&"bench", &"alice", Vector2(120.0, -40.0), 0.5)
@@ -168,7 +168,7 @@ func _test_spawning_2d() -> void:
 	# Freezing lives on the 3D physics gun and handles both, zeroing velocities in one place so a
 	# body frozen while moving does not leap away when thawed.
 	bench.body_2d().linear_velocity = Vector2(400.0, 0.0)
-	DotPhysGun.set_frozen(bench, true)
+	GSPhysGun.set_frozen(bench, true)
 	_check(bench.frozen and bench.body_2d().freeze, "and it freezes")
 	_check(
 		bench.body_2d().linear_velocity == Vector2.ZERO,
@@ -226,7 +226,7 @@ func _test_authority() -> void:
 func _test_budget() -> void:
 	_section("the per-player budget")
 
-	var limits := DotPropLimits.new()
+	var limits := GSPropLimits.new()
 	limits.per_player_budget = 10
 	limits.spawn_interval = 0.0
 	limits.world_budget = 0
@@ -261,7 +261,7 @@ func _test_budget() -> void:
 func _test_group_limits() -> void:
 	_section("limits per group, and per player")
 
-	var limits := DotPropLimits.new()
+	var limits := GSPropLimits.new()
 	limits.per_player_budget = 0
 	limits.spawn_interval = 0.0
 	limits.world_budget = 0
@@ -295,9 +295,9 @@ func _test_group_limits() -> void:
 	_check(usage.has(&"crates") and int(usage[&"crates"][0]) == 5 and int(usage[&"crates"][1]) == 10,
 		"usage reports count and limit per group", str(usage))
 
-	var round_trip := DotPropDef.from_dictionary(spawner.catalogue.get_prop(&"crate").to_dictionary())
+	var round_trip := GSPropDef.from_dictionary(spawner.catalogue.get_prop(&"crate").to_dictionary())
 	_check(round_trip.limit_group == &"crates", "a definition's group survives a document")
-	_check(DotPropDef.make(&"x", "res://x.tscn").group() == DotPropDef.GROUP_PROPS,
+	_check(GSPropDef.make(&"x", "res://x.tscn").group() == GSPropDef.GROUP_PROPS,
 		"and one with none is a prop")
 
 	spawner.catalogue.get_prop(&"crate").limit_group = &""
@@ -310,7 +310,7 @@ func _test_cooldown() -> void:
 
 	# The budget alone does not stop a held key: a player who reaches it, removes
 	# one and spawns another can still spawn as fast as their key repeats.
-	var limits := DotPropLimits.new()
+	var limits := GSPropLimits.new()
 	limits.spawn_interval = 0.5
 	limits.per_player_budget = 0
 	limits.world_budget = 0
@@ -343,7 +343,7 @@ func _test_world_budget() -> void:
 
 	# Not the per-player budget times the slot count: thirty players each within
 	# their own is thirty times the physics.
-	var limits := DotPropLimits.new()
+	var limits := GSPropLimits.new()
 	limits.world_budget = 6
 	limits.per_player_budget = 0
 	limits.spawn_interval = 0.0
@@ -364,7 +364,7 @@ func _test_world_budget() -> void:
 func _test_undo() -> void:
 	_section("undo")
 
-	var limits := DotPropLimits.new()
+	var limits := GSPropLimits.new()
 	limits.spawn_interval = 0.0
 	limits.undo_depth = 3
 
@@ -400,10 +400,10 @@ func _test_undo() -> void:
 	spawner.queue_free()
 
 	# -1 is unlimited: every spawn stays undoable. 0 is no undo. Below -1 is refused.
-	var unlimited := DotPropLimits.new()
+	var unlimited := GSPropLimits.new()
 	unlimited.spawn_interval = 0.0
 	unlimited.per_player_budget = 0
-	unlimited.undo_depth = DotPropLimits.UNDO_UNLIMITED
+	unlimited.undo_depth = GSPropLimits.UNDO_UNLIMITED
 	_check(unlimited.validate().ok, "undo_depth -1 validates")
 	var sp2 := _spawner(unlimited)
 	for _i in range(100):
@@ -414,7 +414,7 @@ func _test_undo() -> void:
 	_check(undone == 100, "unlimited undo keeps all 100 spawns undoable", "%d" % undone)
 	sp2.queue_free()
 
-	var bad := DotPropLimits.new()
+	var bad := GSPropLimits.new()
 	bad.undo_depth = -2
 	_check(not bad.validate().ok, "undo_depth below -1 is refused, not clamped")
 
@@ -424,7 +424,7 @@ func _test_undo() -> void:
 func _test_cleanup_on_leave() -> void:
 	_section("cleanup when a player leaves")
 
-	var limits := DotPropLimits.new()
+	var limits := GSPropLimits.new()
 	limits.spawn_interval = 0.0
 
 	var spawner := _spawner(limits)
@@ -436,7 +436,7 @@ func _test_cleanup_on_leave() -> void:
 
 	var reasons := PackedStringArray()
 	spawner.removed.connect(
-		func(_p: DotPropInstance, reason: StringName) -> void:
+		func(_p: GSPropInstance, reason: StringName) -> void:
 			reasons.append(String(reason))
 	)
 
@@ -467,7 +467,7 @@ func _test_cleanup_on_leave() -> void:
 func _test_no_leaked_nodes() -> void:
 	_section("nothing leaks")
 
-	var limits := DotPropLimits.new()
+	var limits := GSPropLimits.new()
 	limits.spawn_interval = 0.0
 
 	var spawner := _spawner(limits)

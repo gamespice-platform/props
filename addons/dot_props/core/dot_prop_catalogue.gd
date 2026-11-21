@@ -1,10 +1,10 @@
 @tool
-class_name DotPropCatalogue
+class_name GSPropCatalogue
 extends Resource
 
 ## Every prop a server offers, and the file an operator edits.
 ##
-## Same shape and the same reasoning as [code]DotMapCatalogue[/code]: plain JSON,
+## Same shape and the same reasoning as [code]GSMapCatalogue[/code]: plain JSON,
 ## because the person maintaining it on a community server is a person with a text
 ## editor; one bad entry does not condemn the file; an exact id match wins a search.
 
@@ -12,7 +12,7 @@ const CHANNEL := "props.catalogue"
 
 const FORMAT_VERSION := 1
 
-@export var props: Array[DotPropDef] = []
+@export var props: Array[GSPropDef] = []
 
 @export var meta: Dictionary = {}
 
@@ -22,16 +22,16 @@ var _by_id: Dictionary = {}
 ## A spawn menu rebuilds on this. (Not `changed`: Resource already has one, for the editor.)
 signal content_changed
 
-var _index: DotContentIndex = null
+var _index: GSContentIndex = null
 var _kinds: PackedStringArray = PackedStringArray()
 
 ## The rows [method follow_content] added, so a refresh removes those and nothing else.
-var _followed: Array[DotPropDef] = []
+var _followed: Array[GSPropDef] = []
 
 
-func add(prop: DotPropDef) -> DotResult:
+func add(prop: GSPropDef) -> GSResult:
 	if prop == null:
-		return DotResult.fail(DotError.CODE_INVALID, "No prop to add.")
+		return GSResult.fail(GSError.CODE_INVALID, "No prop to add.")
 
 	var valid := prop.validate()
 
@@ -42,20 +42,20 @@ func add(prop: DotPropDef) -> DotResult:
 		_reindex()
 
 	if _by_id.has(prop.id):
-		var existing: DotPropDef = _by_id[prop.id]
+		var existing: GSPropDef = _by_id[prop.id]
 		props[props.find(existing)] = prop
 		_by_id[prop.id] = prop
-		return DotResult.success(prop)
+		return GSResult.success(prop)
 
 	props.append(prop)
 	_by_id[prop.id] = prop
 
-	return DotResult.success(prop)
+	return GSResult.success(prop)
 
 
 ## Download every pack this catalogue's props live in.
 ##
-## [b]Nothing used to fetch these.[/b] A DotPropDef has carried a `content_id` since it was
+## [b]Nothing used to fetch these.[/b] A GSPropDef has carried a `content_id` since it was
 ## written and it is serialised onto the wire, but no code anywhere asked GameSpice Cloud for
 ## one — so a delivered prop was refused with "that prop's content is not loaded",
 ## forever, on a server that had configured it perfectly. The refusal is correct and
@@ -69,9 +69,9 @@ func add(prop: DotPropDef) -> DotResult:
 ## spawn path synchronous, which is what every caller of it already assumes.
 ##
 ## Non-fatal by construction: a pack that will not download leaves that prop
-## unspawnable and everything else working. See [method DotContent.ensure_all] for the
+## unspawnable and everything else working. See [method GSContent.ensure_all] for the
 ## shape of the answer.
-func ensure_content() -> DotResult:
+func ensure_content() -> GSResult:
 	if _by_id.size() != props.size():
 		_reindex()
 
@@ -81,13 +81,13 @@ func ensure_content() -> DotResult:
 		if entry != null and String(entry.content_id) != "":
 			ids.append(String(entry.content_id))
 
-	return await DotContent.ensure_all(ids)
+	return await GSContent.ensure_all(ids)
 
 
-## Follow a [DotContentIndex]: every [param kinds] entry (default [code]prop[/code]) of a mounted
-## Workshop pack, in the index's current session, becomes a [DotPropDef] here, and the rows are
+## Follow a [GSContentIndex]: every [param kinds] entry (default [code]prop[/code]) of a mounted
+## Workshop pack, in the index's current session, becomes a [GSPropDef] here, and the rows are
 ## rebuilt whenever a pack arrives or the session changes. This is how a subscription reaches a
-## spawn menu without the menu naming a pack. Same shape as [code]DotMapCatalogue.follow_content[/code].
+## spawn menu without the menu naming a pack. Same shape as [code]GSMapCatalogue.follow_content[/code].
 ##
 ## [b]Solo only, by the index.[/b] An online session sees no solo entry, so a server that never
 ## followed and a client that did agree on what can be spawned. [b]Own ids win[/b]: an id this
@@ -97,12 +97,12 @@ func ensure_content() -> DotResult:
 ## [method to_dictionary] leaves pack rows out, so saving an operator's JSON never writes a
 ## subscription into it. [b]An empty [param kinds] follows nothing.[/b]
 ##
-## An entry names a [code]def[/code] (a [DotPropDef] [code].tres[/code], loaded and copied) or a
+## An entry names a [code]def[/code] (a [GSPropDef] [code].tres[/code], loaded and copied) or a
 ## [code]scene[/code] (the rest from [code]size[/code], [code]mass[/code], [code]cost[/code] fields
 ## of the entry, else defaults).
 func follow_content(
-	index: DotContentIndex, p_kinds: PackedStringArray = PackedStringArray(["prop"])
-) -> DotPropCatalogue:
+	index: GSContentIndex, p_kinds: PackedStringArray = PackedStringArray(["prop"])
+) -> GSPropCatalogue:
 	unfollow_content()
 	if index == null:
 		return self
@@ -126,7 +126,7 @@ func unfollow_content() -> void:
 		content_changed.emit()
 
 
-## Rebuild the pack rows from the index now. Needed after [method DotContentIndex.tag_pack],
+## Rebuild the pack rows from the index now. Needed after [method GSContentIndex.tag_pack],
 ## which changes a pack's sessions without announcing it.
 func refresh_content() -> void:
 	var before := _followed_keys()
@@ -138,7 +138,7 @@ func refresh_content() -> void:
 				if prop == null:
 					continue
 				if has(prop.id):
-					DotLog.debug(CHANNEL, "a pack prop lost its id to an existing prop", {
+					GSLog.debug(CHANNEL, "a pack prop lost its id to an existing prop", {
 						"id": String(prop.id), "pack": entry.content_id
 					})
 					continue
@@ -166,7 +166,7 @@ func _drop_followed() -> bool:
 	return had
 
 
-func _on_index_pack_added(_pack: Dictionary, _entries: Array[DotContentEntry]) -> void:
+func _on_index_pack_added(_pack: Dictionary, _entries: Array[GSContentEntry]) -> void:
 	refresh_content()
 
 
@@ -174,20 +174,20 @@ func _on_index_session_changed(_session: StringName) -> void:
 	refresh_content()
 
 
-func _def_from_entry(entry: DotContentEntry) -> DotPropDef:
-	var prop: DotPropDef = null
+func _def_from_entry(entry: GSContentEntry) -> GSPropDef:
+	var prop: GSPropDef = null
 	var def_path := entry.path("def")
 	if def_path != "":
 		var loaded: Variant = ResourceLoader.load(def_path) if ResourceLoader.exists(def_path) else null
-		if loaded is DotPropDef:
-			prop = (loaded as DotPropDef).duplicate(true)
+		if loaded is GSPropDef:
+			prop = (loaded as GSPropDef).duplicate(true)
 	if prop == null:
-		prop = DotPropDef.new()
+		prop = GSPropDef.new()
 		prop.scene_path = entry.path("scene")
 		prop.mass = maxf(float(entry.raw.get("mass", prop.mass)), 0.01)
 		prop.cost = maxi(int(entry.raw.get("cost", prop.cost)), 0)
 		if entry.raw.has("size"):
-			prop.size = clampi(int(entry.raw["size"]), 0, DotPropDef.Size.HUGE) as DotPropDef.Size
+			prop.size = clampi(int(entry.raw["size"]), 0, GSPropDef.Size.HUGE) as GSPropDef.Size
 	# The entry's identity is the pack's, whatever a copied def says.
 	prop.id = StringName(entry.id)
 	var title := entry.pack_title if entry.pack_title != "" else entry.content_id
@@ -201,19 +201,19 @@ func _def_from_entry(entry: DotContentEntry) -> DotPropDef:
 	prop.meta["entry_key"] = entry.key
 	var valid := prop.validate()
 	if not valid.ok:
-		DotLog.debug(CHANNEL, "a pack prop was refused", {
+		GSLog.debug(CHANNEL, "a pack prop was refused", {
 			"key": entry.key, "why": valid.error.message
 		})
 		return null
 	return prop
 
 
-func get_prop(id: StringName) -> DotPropDef:
+func get_prop(id: StringName) -> GSPropDef:
 	if _by_id.size() != props.size():
 		_reindex()
 
 	var found: Variant = _by_id.get(id)
-	return found if found is DotPropDef else null
+	return found if found is GSPropDef else null
 
 
 func has(id: StringName) -> bool:
@@ -257,8 +257,8 @@ func categories() -> PackedStringArray:
 	return out
 
 
-func in_category(category: StringName) -> Array[DotPropDef]:
-	var out: Array[DotPropDef] = []
+func in_category(category: StringName) -> Array[GSPropDef]:
+	var out: Array[GSPropDef] = []
 
 	for prop in props:
 		if prop.enabled and prop.category == category:
@@ -268,9 +268,9 @@ func in_category(category: StringName) -> Array[DotPropDef]:
 
 
 ## Props whose id or name contains [param text]. An exact id wins outright.
-func search(text: String, limit: int = 30) -> Array[DotPropDef]:
+func search(text: String, limit: int = 30) -> Array[GSPropDef]:
 	var needle := text.strip_edges().to_lower()
-	var out: Array[DotPropDef] = []
+	var out: Array[GSPropDef] = []
 
 	if needle == "":
 		return out
@@ -327,17 +327,17 @@ func to_json(pretty: bool = true) -> String:
 	return JSON.stringify(to_dictionary(), "  " if pretty else "")
 
 
-static func from_dictionary(data: Dictionary) -> DotResult:
+static func from_dictionary(data: Dictionary) -> GSResult:
 	var format := int(data.get("format", 0))
 
 	if format > FORMAT_VERSION:
-		return DotResult.fail(
-			DotError.CODE_VERSION,
+		return GSResult.fail(
+			GSError.CODE_VERSION,
 			"That prop catalogue was written by a newer version of dot-props.",
 			"format %d, this build reads %d" % [format, FORMAT_VERSION]
 		)
 
-	var catalogue := DotPropCatalogue.new()
+	var catalogue := GSPropCatalogue.new()
 
 	var meta_value: Variant = data.get("meta", {})
 	catalogue.meta = (
@@ -347,7 +347,7 @@ static func from_dictionary(data: Dictionary) -> DotResult:
 	var list_value: Variant = data.get("props", [])
 
 	if not (list_value is Array):
-		return DotResult.fail(DotError.CODE_PARSE, "The props key is not a list.")
+		return GSResult.fail(GSError.CODE_PARSE, "The props key is not a list.")
 
 	var refused := PackedStringArray()
 
@@ -355,40 +355,40 @@ static func from_dictionary(data: Dictionary) -> DotResult:
 		if not (entry is Dictionary):
 			continue
 
-		var prop := DotPropDef.from_dictionary(entry)
+		var prop := GSPropDef.from_dictionary(entry)
 		var added := catalogue.add(prop)
 
 		if not added.ok:
 			refused.append("%s: %s" % [String(prop.id), added.error.message])
 
 	if not refused.is_empty():
-		DotLog.warn(CHANNEL, "some prop entries were dropped", {
+		GSLog.warn(CHANNEL, "some prop entries were dropped", {
 			"count": refused.size(), "entries": ", ".join(refused)
 		})
 
-	return DotResult.success(catalogue)
+	return GSResult.success(catalogue)
 
 
-static func from_json(text: String) -> DotResult:
+static func from_json(text: String) -> GSResult:
 	var parsed: Variant = JSON.parse_string(text)
 
 	if not (parsed is Dictionary):
-		return DotResult.fail(
-			DotError.CODE_PARSE, "A prop catalogue must be a JSON object."
+		return GSResult.fail(
+			GSError.CODE_PARSE, "A prop catalogue must be a JSON object."
 		)
 
 	return from_dictionary(parsed)
 
 
-static func load_json(path: String) -> DotResult:
+static func load_json(path: String) -> GSResult:
 	if not FileAccess.file_exists(path):
-		return DotResult.fail(DotError.CODE_IO, "No prop catalogue there.", path)
+		return GSResult.fail(GSError.CODE_IO, "No prop catalogue there.", path)
 
 	var file := FileAccess.open(path, FileAccess.READ)
 
 	if file == null:
-		return DotResult.failure(
-			DotError.from_engine(FileAccess.get_open_error(), path)
+		return GSResult.failure(
+			GSError.from_engine(FileAccess.get_open_error(), path)
 		)
 
 	var text := file.get_as_text()
@@ -405,4 +405,4 @@ func describe() -> Dictionary:
 
 
 func _to_string() -> String:
-	return "DotPropCatalogue(%d props)" % props.size()
+	return "GSPropCatalogue(%d props)" % props.size()

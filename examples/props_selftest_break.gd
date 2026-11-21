@@ -34,7 +34,7 @@ func _test_breaking() -> void:
 	# value, so a captured int assigned inside a handler stays at its initial value
 	# outside it while an Array mutated inside one is visible. See docs.
 	var seen: Array = []
-	damage.broken.connect(func(p: DotPropInstance, at: Vector3, by: StringName) -> void:
+	damage.broken.connect(func(p: GSPropInstance, at: Vector3, by: StringName) -> void:
 		seen.append({"alive": p.is_alive(), "at": at, "by": by}))
 
 	var killed := damage.hurt(box.instance_id, 60.0, &"alice")
@@ -54,7 +54,7 @@ func _test_breaking() -> void:
 	_check(not gone.ok, "hurting a prop that is already gone is refused")
 
 	var solid := damage.hurt(crate.instance_id, 10.0)
-	_check(not solid.ok and solid.error.code == DotError.CODE_UNSUPPORTED,
+	_check(not solid.ok and solid.error.code == GSError.CODE_UNSUPPORTED,
 		"hurting an indestructible prop is refused as unsupported")
 
 	_check(not damage.hurt(crate.instance_id, -5.0).ok, "negative damage is refused")
@@ -68,7 +68,7 @@ func _test_breaking_authority() -> void:
 	spawner.catalogue = _breakables()
 	spawner.limits.spawn_interval = 0.0
 
-	var damage := DotPropDamage.new()
+	var damage := GSPropDamage.new()
 	damage.authoritative = false
 	spawner.add_child(damage)
 
@@ -78,7 +78,7 @@ func _test_breaking_authority() -> void:
 		"a client's damage node still tracks health, so it can draw a damaged crate")
 
 	var refused := damage.hurt(box.instance_id, 500.0)
-	_check(not refused.ok and refused.error.code == DotError.CODE_FORBIDDEN,
+	_check(not refused.ok and refused.error.code == GSError.CODE_FORBIDDEN,
 		"but may not hurt anything")
 	_check(not damage.break_now(box.instance_id).ok, "nor break one outright")
 	_check(box.is_alive(), "and the prop survives")
@@ -167,7 +167,7 @@ func _test_explosion() -> void:
 	damage.break_now(crate.instance_id)
 	_check(quiet.is_empty(), "a prop with no explode_radius describes no blast")
 
-	var silly := DotPropDef.make(&"dud", "res://fixtures/prop_body.tscn")
+	var silly := GSPropDef.make(&"dud", "res://fixtures/prop_body.tscn")
 	silly.explode_radius = 5.0
 	_check(not silly.validate().ok,
 		"a blast with no damage and no force is refused, not shipped as a dud barrel")
@@ -183,7 +183,7 @@ func _test_carry() -> void:
 	spawner.limits.spawn_interval = 0.0
 	spawner.limits.per_player_budget = 40
 
-	var carry := DotPropCarry.new()
+	var carry := GSPropCarry.new()
 	spawner.add_child(carry)
 
 	var box := spawner.spawn(&"box", &"alice", Vector3(0.0, 1.0, 0.0))
@@ -243,7 +243,7 @@ func _test_carry_pushes() -> void:
 	spawner.limits.spawn_interval = 0.0
 	spawner.limits.per_player_budget = 40
 
-	var carry := DotPropCarry.new()
+	var carry := GSPropCarry.new()
 	spawner.add_child(carry)
 
 	var box := spawner.spawn(&"box", &"alice", Vector3(0.0, 40.0, 0.0))
@@ -313,44 +313,44 @@ func _test_carry_pushes() -> void:
 func _test_disguise() -> void:
 	_section("hiding as a prop: what a player may become, and what it costs them")
 
-	var rules := DotPropDisguiseRules.new()
+	var rules := GSPropDisguiseRules.new()
 	_check(rules.validate().ok, "the default rules are usable")
 
 	var cabinet := Vector3(0.7, 1.4, 0.5)
 	var bottle := Vector3(0.12, 0.3, 0.12)
-	var hc := DotPropDisguise.health(cabinet, rules)
-	var hb := DotPropDisguise.health(bottle, rules)
+	var hc := GSPropDisguise.health(cabinet, rules)
+	var hb := GSPropDisguise.health(bottle, rules)
 	_check(hc > 100.0 and hc <= rules.max_health, "a cabinet is worth a lot of hits (%.0f)" % hc)
 	_check(hb < 30.0 and hb >= rules.min_health, "a bottle very few (%.0f)" % hb)
 	var ratio := hc / hb
 	# 0.49 m³ against 0.0043 m³ is over a hundred times the volume; the health must not follow it.
 	_check(ratio > 4.0 and ratio < 20.0, "and the cabinet is worth several bottles, not a hundred (%.1fx)" % ratio)
 
-	_check(not DotPropDisguise.may_take(Vector3(0.05, 0.3, 0.05), rules).ok, "a pencil is too small to hide as")
-	_check(not DotPropDisguise.may_take(Vector3(3, 3, 3), rules).ok, "a shed is too big")
-	_check(DotPropDisguise.may_take(cabinet, rules).ok, "a cabinet is fine")
+	_check(not GSPropDisguise.may_take(Vector3(0.05, 0.3, 0.05), rules).ok, "a pencil is too small to hide as")
+	_check(not GSPropDisguise.may_take(Vector3(3, 3, 3), rules).ok, "a shed is too big")
+	_check(GSPropDisguise.may_take(cabinet, rules).ok, "a cabinet is fine")
 
 	var sofa := Vector3(2.1, 0.9, 0.95)
-	var hull := DotPropDisguise.hull(sofa, rules)
+	var hull := GSPropDisguise.hull(sofa, rules)
 	_check(is_equal_approx(hull.x, 0.475), "a sofa's hull is half its NARROWER footprint, so it fits the door it came in by (r %.3f)" % hull.x)
 	_check(is_equal_approx(hull.y, 0.95), "and a capsule is never shorter than it is wide (h %.2f for a 0.9 m sofa)" % hull.y)
-	var tiny := DotPropDisguise.hull(bottle, rules)
+	var tiny := GSPropDisguise.hull(bottle, rules)
 	_check(is_equal_approx(tiny.x, rules.hull_min_radius) and is_equal_approx(tiny.y, rules.hull_min_height),
 		"a bottle gets the smallest hull the rules allow (r %.2f, h %.2f)" % [tiny.x, tiny.y])
 
-	_check(is_equal_approx(DotPropDisguise.health_after(50.0, 100.0, 140.0, rules), 70.0),
+	_check(is_equal_approx(GSPropDisguise.health_after(50.0, 100.0, 140.0, rules), 70.0),
 		"changing disguise keeps the fraction of health, not the new prop's full health")
 	rules.keep_health_fraction = false
-	_check(is_equal_approx(DotPropDisguise.health_after(50.0, 100.0, 140.0, rules), 140.0),
+	_check(is_equal_approx(GSPropDisguise.health_after(50.0, 100.0, 140.0, rules), 140.0),
 		"unless the server says a new prop is a fresh one")
 	rules.keep_health_fraction = true
 
-	_check(DotPropDisguise.within_reach(Vector3.ZERO, Vector3(0, 0, -2.9), rules)
-		and not DotPropDisguise.within_reach(Vector3.ZERO, Vector3(0, 0, -3.2), rules),
+	_check(GSPropDisguise.within_reach(Vector3.ZERO, Vector3(0, 0, -2.9), rules)
+		and not GSPropDisguise.within_reach(Vector3.ZERO, Vector3(0, 0, -3.2), rules),
 		"a prop is copied from within reach and not past it")
 
-	var d := DotPropDisguise.of(&"cabinet", cabinet)
-	_check(d.is_disguised() and not DotPropDisguise.new().is_disguised(), "an empty id is your own body")
+	var d := GSPropDisguise.of(&"cabinet", cabinet)
+	_check(d.is_disguised() and not GSPropDisguise.new().is_disguised(), "an empty id is your own body")
 	_check(d.tilt(2, true, rules) and is_equal_approx(d.pitch, 30.0), "a tilt turns by the rules' step")
 	for i in range(10):
 		var _t := d.tilt(1, true, rules)
@@ -367,22 +367,22 @@ func _test_disguise() -> void:
 		"unlocked, it turns with the player's view")
 
 	d.roll = 15.0
-	var back := DotPropDisguise.from_wire(d.to_wire())
+	var back := GSPropDisguise.from_wire(d.to_wire())
 	_check(back.prop_id == &"cabinet" and back.size.is_equal_approx(cabinet) and is_equal_approx(back.roll, 15.0)
 		and back.locked == d.locked, "a disguise survives the wire")
 
 	_check_leant_bottle(rules)
 
-	var bad := DotPropDisguiseRules.new()
+	var bad := GSPropDisguiseRules.new()
 	bad.hull_min_height = 0.1
 	_check(not bad.validate().ok, "rules whose smallest hull would be a capsule shorter than it is wide are refused")
 	_done()
 
 
-func _check_leant_bottle(rules: DotPropDisguiseRules) -> void:
+func _check_leant_bottle(rules: GSPropDisguiseRules) -> void:
 	# Leant every way a player can turn it, a bottle's box never goes under the floor and its
 	# lowest corner is on it.
-	var bottle_d := DotPropDisguise.of(&"bottle", Vector3(0.1, 0.32, 0.1))
+	var bottle_d := GSPropDisguise.of(&"bottle", Vector3(0.1, 0.32, 0.1))
 	var worst_low := INF
 	var worst_high := -INF
 	var hull_ok := true
@@ -413,7 +413,7 @@ func _check_leant_bottle(rules: DotPropDisguiseRules) -> void:
 func _test_taunts() -> void:
 	_section("taunts: chosen, forced, and the meter between")
 
-	var t := DotPropTaunts.new()
+	var t := GSPropTaunts.new()
 	t.auto_after = 10.0
 	t.auto_radius = 1.5
 	t.cooldown = 2.0
@@ -472,24 +472,24 @@ func _test_pieces() -> void:
 		mesh.position = part[1]
 		table.add_child(mesh)
 
-	var pieces := DotPropPieces.measure(table, Transform3D.IDENTITY)
+	var pieces := GSPropPieces.measure(table, Transform3D.IDENTITY)
 	_check(pieces.size() >= 2, "a table is cut into pieces", "%d" % pieces.size())
-	_check(DotPropPieces.contains(pieces, Vector3(0.0, 0.72, 0.0)) and DotPropPieces.contains(pieces, Vector3(0.9, 0.3, 0.4), 0.02),
+	_check(GSPropPieces.contains(pieces, Vector3(0.0, 0.72, 0.0)) and GSPropPieces.contains(pieces, Vector3(0.9, 0.3, 0.4), 0.02),
 		"its top and its legs are solid")
-	_check(not DotPropPieces.contains(pieces, Vector3(0.0, 0.3, 0.0)), "and the space under it is not")
-	_check(absf(DotPropPieces.top_at(pieces, 0.3, 0.2) - 0.75) < 0.03 and DotPropPieces.top_at(pieces, 3.0, 0.0) == -INF,
+	_check(not GSPropPieces.contains(pieces, Vector3(0.0, 0.3, 0.0)), "and the space under it is not")
+	_check(absf(GSPropPieces.top_at(pieces, 0.3, 0.2) - 0.75) < 0.03 and GSPropPieces.top_at(pieces, 3.0, 0.0) == -INF,
 		"a thing set down on it rests on its top, and nothing is under a point off it",
-		"%.3f" % DotPropPieces.top_at(pieces, 0.3, 0.2))
-	var again := DotPropPieces.measure(table, Transform3D.IDENTITY)
-	_check(JSON.stringify(DotPropPieces.encode(again)) == JSON.stringify(DotPropPieces.encode(pieces)),
+		"%.3f" % GSPropPieces.top_at(pieces, 0.3, 0.2))
+	var again := GSPropPieces.measure(table, Transform3D.IDENTITY)
+	_check(JSON.stringify(GSPropPieces.encode(again)) == JSON.stringify(GSPropPieces.encode(pieces)),
 		"measuring twice gives the same numbers, so a --check can compare files")
 
-	var wire: Variant = JSON.parse_string(JSON.stringify(DotPropPieces.encode(pieces)))
-	var back := DotPropPieces.decode(wire)
-	_check(back.size() == pieces.size() and DotPropPieces.bounds(back).is_equal_approx(DotPropPieces.bounds(pieces)),
+	var wire: Variant = JSON.parse_string(JSON.stringify(GSPropPieces.encode(pieces)))
+	var back := GSPropPieces.decode(wire)
+	_check(back.size() == pieces.size() and GSPropPieces.bounds(back).is_equal_approx(GSPropPieces.bounds(pieces)),
 		"pieces survive JSON and come back the same")
-	_check(DotPropPieces.decode([[1, 2, 3], "nonsense", 7]).is_empty(), "anything malformed is skipped, not guessed at")
-	var shapes := DotPropPieces.shapes(back)
+	_check(GSPropPieces.decode([[1, 2, 3], "nonsense", 7]).is_empty(), "anything malformed is skipped, not guessed at")
+	var shapes := GSPropPieces.shapes(back)
 	_check(shapes.size() == back.size() and shapes[0].points.size() == back[0].size(), "one convex shape per piece")
 	table.free()
 
@@ -498,7 +498,7 @@ func _test_pieces() -> void:
 	var cube := BoxMesh.new()
 	cube.size = Vector3(1.0, 1.0, 1.0)
 	crate.mesh = cube
-	_check(DotPropPieces.measure(crate, Transform3D.IDENTITY).is_empty(), "a crate gets no pieces: its box is as good")
+	_check(GSPropPieces.measure(crate, Transform3D.IDENTITY).is_empty(), "a crate gets no pieces: its box is as good")
 	crate.free()
 	_done()
 
@@ -507,22 +507,22 @@ func _test_pieces() -> void:
 
 func _test_toy_catalogue() -> void:
 	_section("the toy catalogue: a dozen and more, every kind, retuned from data")
-	var c := DotPropBodyCatalogue.stock()
+	var c := GSPropBodyCatalogue.stock()
 	_check(c.size() >= 12, "the stock has at least a dozen toys", str(c.size()))
 	var kinds := {}
 	for id in c.ids():
 		kinds[c.get_def(StringName(id))["kind"]] = true
-	_check(kinds.size() == DotPropBodyCatalogue.KINDS.size(), "and uses every kind", str(kinds.keys()))
-	var sounds := DotPropBodySounds.ids()
+	_check(kinds.size() == GSPropBodyCatalogue.KINDS.size(), "and uses every kind", str(kinds.keys()))
+	var sounds := GSPropBodySounds.ids()
 	var unheard := PackedStringArray()
 	for id in c.ids():
 		var def := c.get_def(StringName(id))
 		for key in ["sound_hit", "sound_use"]:
 			if def[key] != &"" and not sounds.has(def[key]):
 				unheard.append("%s.%s" % [id, key])
-	_check(unheard.is_empty(), "every sound a toy names is a row in DotPropBodySounds", ", ".join(unheard))
+	_check(unheard.is_empty(), "every sound a toy names is a row in GSPropBodySounds", ", ".join(unheard))
 	var absent := PackedStringArray()
-	for row in DotPropBodySounds.rows():
+	for row in GSPropBodySounds.rows():
 		for path: String in row["variants"]:
 			if not ResourceLoader.exists(path):
 				absent.append(path)
@@ -533,8 +533,8 @@ func _test_toy_catalogue() -> void:
 		"a game retunes one field of a stock toy and adds its own from data")
 	var bad := c.merge({"rocket": {"kind": "rocket"}})
 	_check(not bad.ok and not c.has(&"rocket"), "a kind that does not exist is refused, by name", bad.error.message if not bad.ok else "")
-	_check(DotPropBodyBox.normal_placement({"toy": "swing", "at": [1, 0, 2], "yaw": 90, "links": [3]}).get("links") == [3]
-		and DotPropBodyBox.normal_placement({"at": [0, 0, 0]}).is_empty(), "a placement is {toy, at}, and one without a toy is refused")
+	_check(GSPropBodyBox.normal_placement({"toy": "swing", "at": [1, 0, 2], "yaw": 90, "links": [3]}).get("links") == [3]
+		and GSPropBodyBox.normal_placement({"at": [0, 0, 0]}).is_empty(), "a placement is {toy, at}, and one without a toy is refused")
 	_done()
 
 
@@ -555,14 +555,14 @@ func _test_buoyancy() -> void:
 	var surface := func(material: Variant) -> Variant: return water if material == &"water" else null
 	var liquids := [{"box": AABB(Vector3(-5, -5, -5), Vector3(10, 5, 10)), "material": &"water"}]
 
-	_check(is_equal_approx(DotPropBuoyancy.volume_of(Vector3(1, 2, 3), 2.0, "box"), 48.0), "a box's volume is its extent scaled cubed")
-	_check(is_equal_approx(DotPropBuoyancy.volume_of(Vector3(2, 2, 2), 1.0, "sphere"), 8.0 * PI / 6.0), "a sphere is pi/6 of its box")
-	_check(is_equal_approx(DotPropBuoyancy.volume_of(Vector3(2, 2, 2), 1.0, "cylinder"), 8.0 * PI / 4.0), "a cylinder is pi/4 of its box")
+	_check(is_equal_approx(GSPropBuoyancy.volume_of(Vector3(1, 2, 3), 2.0, "box"), 48.0), "a box's volume is its extent scaled cubed")
+	_check(is_equal_approx(GSPropBuoyancy.volume_of(Vector3(2, 2, 2), 1.0, "sphere"), 8.0 * PI / 6.0), "a sphere is pi/6 of its box")
+	_check(is_equal_approx(GSPropBuoyancy.volume_of(Vector3(2, 2, 2), 1.0, "cylinder"), 8.0 * PI / 4.0), "a cylinder is pi/4 of its box")
 
 	var box := liquids[0]["box"] as AABB
-	_check(is_equal_approx(DotPropBuoyancy.submerged_fraction(Vector3(0, 0, 0), 0.5, box), 0.5), "a body at the surface is half under")
-	_check(DotPropBuoyancy.submerged_fraction(Vector3(0, 2, 0), 0.5, box) == 0.0, "above the surface is not under")
-	_check(DotPropBuoyancy.submerged_fraction(Vector3(9, -1, 0), 0.5, box) == 0.0, "beside the liquid is not under")
+	_check(is_equal_approx(GSPropBuoyancy.submerged_fraction(Vector3(0, 0, 0), 0.5, box), 0.5), "a body at the surface is half under")
+	_check(GSPropBuoyancy.submerged_fraction(Vector3(0, 2, 0), 0.5, box) == 0.0, "above the surface is not under")
+	_check(GSPropBuoyancy.submerged_fraction(Vector3(9, -1, 0), 0.5, box) == 0.0, "beside the liquid is not under")
 
 	var floater := RigidBody3D.new()
 	floater.mass = 1.0
@@ -570,10 +570,10 @@ func _test_buoyancy() -> void:
 	floater.add_child(_unit_shape())
 	_world.add_child(floater)
 	floater.global_position = Vector3(0, -1.0, 0)
-	_check(DotPropBuoyancy.apply(floater, 1.0, 0.25, 100.0, liquids, surface, 1.0 / 60.0, 9.8), "a light body in water is acted on")
+	_check(GSPropBuoyancy.apply(floater, 1.0, 0.25, 100.0, liquids, surface, 1.0 / 60.0, 9.8), "a light body in water is acted on")
 	await get_tree().physics_frame
 	_check(floater.linear_velocity.y > 0.0, "a body lighter than water rises")
-	_check(floater.linear_velocity.y <= DotPropBuoyancy.RISE_SPEED + 0.001, "and never faster than the rise speed", str(floater.linear_velocity.y))
+	_check(floater.linear_velocity.y <= GSPropBuoyancy.RISE_SPEED + 0.001, "and never faster than the rise speed", str(floater.linear_velocity.y))
 
 	var sinker := RigidBody3D.new()
 	sinker.mass = 1.0
@@ -581,15 +581,15 @@ func _test_buoyancy() -> void:
 	sinker.add_child(_unit_shape())
 	_world.add_child(sinker)
 	sinker.global_position = Vector3(0, -1.0, 0)
-	var _acted := DotPropBuoyancy.apply(sinker, 0.1, 0.25, 5000.0, liquids, surface, 1.0 / 60.0, 9.8)
+	var _acted := GSPropBuoyancy.apply(sinker, 0.1, 0.25, 5000.0, liquids, surface, 1.0 / 60.0, 9.8)
 	await get_tree().physics_frame
 	_check(sinker.linear_velocity.y < 0.0, "a body denser than water sinks, whatever its catalogue mass")
 
 	var dry := RigidBody3D.new()
 	_world.add_child(dry)
 	dry.global_position = Vector3(0, 3.0, 0)
-	_check(not DotPropBuoyancy.apply(dry, 0.1, 0.25, 100.0, liquids, surface, 1.0 / 60.0, 9.8), "a body out of the liquid is left alone")
-	_check(not DotPropBuoyancy.apply(floater, 0.1, 0.25, 100.0, [{"box": box, "material": &"oil"}], surface, 1.0 / 60.0, 9.8), "a liquid the lookup does not know acts on nothing")
+	_check(not GSPropBuoyancy.apply(dry, 0.1, 0.25, 100.0, liquids, surface, 1.0 / 60.0, 9.8), "a body out of the liquid is left alone")
+	_check(not GSPropBuoyancy.apply(floater, 0.1, 0.25, 100.0, [{"box": box, "material": &"oil"}], surface, 1.0 / 60.0, 9.8), "a liquid the lookup does not know acts on nothing")
 
 	floater.queue_free()
 	sinker.queue_free()
@@ -605,27 +605,27 @@ func _test_panes() -> void:
 	var thin := _pane_box(map, 3, Vector3(0, 0, 0), Vector3(4, 4, 0.1), &"glass")
 	var _stone := _pane_box(map, 4, Vector3(10, 0, 0), Vector3(4, 4, 0.1), &"stone")
 
-	var panes := DotPropPanes.index_map(map, &"pg_box",
+	var panes := GSPropPanes.index_map(map, &"pg_box",
 		func(n: Node) -> StringName: return n.get_meta(&"mat"),
 		func(m: StringName) -> float: return 20.0 if m == &"glass" else 0.0)
 	_check(panes.size() == 1 and panes.has(3), "only boxes whose material breaks are panes")
-	_check(DotPropPanes.index_map(null, &"pg_box", Callable(), Callable()).is_empty(), "no map, no panes")
+	_check(GSPropPanes.index_map(null, &"pg_box", Callable(), Callable()).is_empty(), "no map, no panes")
 
-	_check(DotPropPanes.bounds_of(thin).size.is_equal_approx(Vector3(4, 4, 0.1)), "bounds come from the box shape")
-	_check(DotPropPanes.normal_of(thin).is_equal_approx(Vector3(0, 0, 1)), "the normal is the thinnest axis")
+	_check(GSPropPanes.bounds_of(thin).size.is_equal_approx(Vector3(4, 4, 0.1)), "bounds come from the box shape")
+	_check(GSPropPanes.normal_of(thin).is_equal_approx(Vector3(0, 0, 1)), "the normal is the thinnest axis")
 
-	_check(DotPropPanes.damage(panes, 9, 5.0).is_empty(), "damage to no pane is nothing")
-	var hit := DotPropPanes.damage(panes, 3, 5.0)
+	_check(GSPropPanes.damage(panes, 9, 5.0).is_empty(), "damage to no pane is nothing")
+	var hit := GSPropPanes.damage(panes, 3, 5.0)
 	_check(is_equal_approx(float(hit["before"]), 20.0) and not hit["broke"], "a small hit scratches it")
-	_check(DotPropPanes.damage(panes, 3, 15.0)["broke"], "enough breaks it")
+	_check(GSPropPanes.damage(panes, 3, 15.0)["broke"], "enough breaks it")
 
-	panes = DotPropPanes.index_map(map, &"pg_box",
+	panes = GSPropPanes.index_map(map, &"pg_box",
 		func(n: Node) -> StringName: return n.get_meta(&"mat"),
 		func(m: StringName) -> float: return 20.0 if m == &"glass" else 0.0)
-	var near := DotPropPanes.blast_hits(panes, Vector3(0, 0, 1.0), 5.0, 100.0)
-	var far := DotPropPanes.blast_hits(panes, Vector3(0, 0, 50.0), 5.0, 100.0)
+	var near := GSPropPanes.blast_hits(panes, Vector3(0, 0, 1.0), 5.0, 100.0)
+	var far := GSPropPanes.blast_hits(panes, Vector3(0, 0, 50.0), 5.0, 100.0)
 	_check(near.size() == 1 and float(near[0][1]) > 50.0, "a blast beside a pane hurts it hard")
-	_check(far.is_empty() and DotPropPanes.blast_hits(panes, Vector3.ZERO, 0.0, 1.0).is_empty(), "a far blast, or no radius, hurts nothing")
+	_check(far.is_empty() and GSPropPanes.blast_hits(panes, Vector3.ZERO, 0.0, 1.0).is_empty(), "a far blast, or no radius, hurts nothing")
 
 	var body := RigidBody3D.new()
 	body.mass = 2.0
@@ -638,17 +638,17 @@ func _test_panes() -> void:
 	var slow := {1: Vector3(0, 0, -2.0)}
 	var along := {1: Vector3(10.0, 0, 0)}
 	var walker := [[7, Vector3(0, 0, 0.3)]]
-	_check(DotPropPanes.impact_hits(panes, [[1, body]], [], fast).size() == 1, "a body thrown into a pane hits it")
-	_check(is_equal_approx(float(DotPropPanes.impact_hits(panes, [[1, body]], [], fast)[0][1]), 10.0), "for mass times speed over two")
-	_check(DotPropPanes.impact_hits(panes, [[1, body]], [], slow).is_empty(), "a slow one does not")
-	_check(DotPropPanes.impact_hits(panes, [[1, body]], [], along).is_empty(), "moving along the pane is not into it")
-	var run := DotPropPanes.impact_hits(panes, [], walker, {7: Vector3(0, 0, -8.0)})
+	_check(GSPropPanes.impact_hits(panes, [[1, body]], [], fast).size() == 1, "a body thrown into a pane hits it")
+	_check(is_equal_approx(float(GSPropPanes.impact_hits(panes, [[1, body]], [], fast)[0][1]), 10.0), "for mass times speed over two")
+	_check(GSPropPanes.impact_hits(panes, [[1, body]], [], slow).is_empty(), "a slow one does not")
+	_check(GSPropPanes.impact_hits(panes, [[1, body]], [], along).is_empty(), "moving along the pane is not into it")
+	var run := GSPropPanes.impact_hits(panes, [], walker, {7: Vector3(0, 0, -8.0)})
 	_check(run.size() == 1 and is_equal_approx(float(run[0][1]), 20.0), "a walker running into it breaks it outright")
 
-	var plan := DotPropPanes.shard_plan(AABB(Vector3(-2, -2, 0), Vector3(4, 4, 0.1)))
-	_check(plan.size() == DotPropPanes.SHARDS_MAX, "a big pane throws the most shards")
-	_check(plan == DotPropPanes.shard_plan(AABB(Vector3(-2, -2, 0), Vector3(4, 4, 0.1))), "and the same ones on every machine")
-	_check(DotPropPanes.shard_plan(AABB(Vector3.ZERO, Vector3(0.1, 0.1, 0.1))).size() == 3, "a small one throws at least three")
+	var plan := GSPropPanes.shard_plan(AABB(Vector3(-2, -2, 0), Vector3(4, 4, 0.1)))
+	_check(plan.size() == GSPropPanes.SHARDS_MAX, "a big pane throws the most shards")
+	_check(plan == GSPropPanes.shard_plan(AABB(Vector3(-2, -2, 0), Vector3(4, 4, 0.1))), "and the same ones on every machine")
+	_check(GSPropPanes.shard_plan(AABB(Vector3.ZERO, Vector3(0.1, 0.1, 0.1))).size() == 3, "a small one throws at least three")
 
 	body.queue_free()
 	map.queue_free()

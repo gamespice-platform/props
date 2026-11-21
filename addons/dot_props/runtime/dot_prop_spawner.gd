@@ -1,5 +1,5 @@
 @tool
-class_name DotPropSpawner
+class_name GSPropSpawner
 extends Node
 
 ## Spawns, tracks, limits and removes props. The node a sandbox game adds.
@@ -14,14 +14,14 @@ extends Node
 ## interpolated a few tens of milliseconds behind.
 ##
 ## So: the server owns every prop, the client draws what it is told, and the tools
-## ([DotPhysGun], [DotGravGun]) send [i]intent[/i] and receive results. That is the
-## same division [DotFpsCommand] makes, minus the prediction.
+## ([GSPhysGun], [GSGravGun]) send [i]intent[/i] and receive results. That is the
+## same division [GSFpsCommand] makes, minus the prediction.
 ##
 ## [codeblock]
-## var spawner := DotPropSpawner.new()
+## var spawner := GSPropSpawner.new()
 ## spawner.catalogue = catalogue
-## spawner.limits = DotPropLimits.new()
-## spawner.world_ref = DotNodeRef.of_path(^"../World")
+## spawner.limits = GSPropLimits.new()
+## spawner.world_ref = GSNodeRef.of_path(^"../World")
 ## add_child(spawner)
 ##
 ## var spawned := spawner.spawn(&"crate", player_id, at, basis)
@@ -30,10 +30,10 @@ extends Node
 const CHANNEL := "props"
 
 ## A prop entered the world.
-signal spawned(prop: DotPropInstance)
+signal spawned(prop: GSPropInstance)
 
 ## A prop left it. [param reason] is one of the REASON_* constants.
-signal removed(prop: DotPropInstance, reason: StringName)
+signal removed(prop: GSPropInstance, reason: StringName)
 
 ## A spawn was refused, and why. For telling the player.
 ##
@@ -50,14 +50,14 @@ const REASON_ADMIN := &"admin"
 
 @export_group("Content")
 
-@export var catalogue: DotPropCatalogue = null
+@export var catalogue: GSPropCatalogue = null
 
-@export var limits: DotPropLimits = null
+@export var limits: GSPropLimits = null
 
 @export_group("Wiring")
 
 ## Where spawned props are added. Defaults to this node.
-@export var world_ref: DotNodeRef = null
+@export var world_ref: GSNodeRef = null
 
 @export_group("Role")
 
@@ -69,7 +69,7 @@ const REASON_ADMIN := &"admin"
 ## checks anything else.
 @export var authoritative: bool = false
 
-## Instance id -> DotPropInstance.
+## Instance id -> GSPropInstance.
 var _props: Dictionary = {}
 
 ## Player id -> Array[int] of every instance id they own, newest last.
@@ -82,7 +82,7 @@ var _props: Dictionary = {}
 ## for ever. The self-test caught it as a count of three where five had been spawned.
 var _by_player: Dictionary = {}
 
-## Player id -> Array[int], newest last, bounded by [member DotPropLimits.undo_depth].
+## Player id -> Array[int], newest last, bounded by [member GSPropLimits.undo_depth].
 ##
 ## History, not ownership. Passing the depth means the oldest can no longer be undone,
 ## not that it stops being yours.
@@ -109,12 +109,12 @@ func _ready() -> void:
 		return
 
 	if limits == null:
-		limits = DotPropLimits.new()
+		limits = GSPropLimits.new()
 
 	var valid := limits.validate()
 
 	if not valid.ok:
-		DotLog.warn(CHANNEL, "prop limits are not usable", {
+		GSLog.warn(CHANNEL, "prop limits are not usable", {
 			"why": valid.error.message
 		})
 
@@ -137,13 +137,13 @@ func spawn(
 	at: Vector3,
 	orientation: Basis = Basis.IDENTITY,
 	entitlements: Callable = Callable()
-) -> DotPropInstance:
+) -> GSPropInstance:
 	var prepared := _prepare(prop_id, player_id, entitlements)
 
 	if prepared.is_empty():
 		return null
 
-	var def: DotPropDef = prepared[0]
+	var def: GSPropDef = prepared[0]
 	var node: Node = prepared[1]
 
 	if not (node is Node3D):
@@ -158,7 +158,7 @@ func spawn(
 	# scene was saved with.
 	#
 	# [b]Otherwise `mass` is a number nothing simulates.[/b] It is read in exactly
-	# one place — `DotPropTool.may_act_on`, against `grab_mass_limit` — so a
+	# one place — `GSPropTool.may_act_on`, against `grab_mass_limit` — so a
 	# catalogue that says 900 kg and a scene saved at 20 kg gives a prop that is
 	# refused by a physics gun for being too heavy and then thrown like a beach ball
 	# by a gravity gun. Nothing errors either way, and the two numbers are only ever
@@ -195,13 +195,13 @@ func spawn_2d(
 	at: Vector2,
 	rotation: float = 0.0,
 	entitlements: Callable = Callable()
-) -> DotPropInstance:
+) -> GSPropInstance:
 	var prepared := _prepare(prop_id, player_id, entitlements)
 
 	if prepared.is_empty():
 		return null
 
-	var def: DotPropDef = prepared[0]
+	var def: GSPropDef = prepared[0]
 	var node: Node = prepared[1]
 
 	if not (node is Node2D):
@@ -278,7 +278,7 @@ func _prepare(
 ## [b]The world is resolved here, after the node exists and is placed.[/b] The other
 ## order — resolve, then instantiate — leaks the node on a world that cannot be resolved,
 ## which is a leak nothing reports because the spawn "correctly" refused.
-func _adopt(def: DotPropDef, body: Node, player_id: StringName) -> DotPropInstance:
+func _adopt(def: GSPropDef, body: Node, player_id: StringName) -> GSPropInstance:
 	var resolved := _resolve_world()
 
 	if not resolved.ok:
@@ -288,7 +288,7 @@ func _adopt(def: DotPropDef, body: Node, player_id: StringName) -> DotPropInstan
 
 	(resolved.value as Node).add_child(body)
 
-	var instance := DotPropInstance.new()
+	var instance := GSPropInstance.new()
 	instance.def = def
 	instance.node = body
 	instance.owner_id = player_id
@@ -388,17 +388,17 @@ func group_usage(player_id: StringName) -> Dictionary:
 
 
 ## Whether a player may spawn one of these right now.
-func may_spawn(def: DotPropDef, player_id: StringName) -> DotResult:
+func may_spawn(def: GSPropDef, player_id: StringName) -> GSResult:
 	if limits == null:
-		return DotResult.success(null)
+		return GSResult.success(null)
 
 	if def.size > limits.max_size:
-		return DotResult.fail(
-			DotError.CODE_FORBIDDEN,
+		return GSResult.fail(
+			GSError.CODE_FORBIDDEN,
 			"That prop is too large for this server.",
 			"%s, ceiling %s" % [
-				DotPropDef.Size.keys()[def.size],
-				DotPropDef.Size.keys()[limits.max_size],
+				GSPropDef.Size.keys()[def.size],
+				GSPropDef.Size.keys()[limits.max_size],
 			]
 		)
 
@@ -406,15 +406,15 @@ func may_spawn(def: DotPropDef, player_id: StringName) -> DotResult:
 		var elapsed := _now - float(_last_spawn[player_id])
 
 		if elapsed < limits.spawn_interval:
-			return DotResult.fail(
-				DotError.CODE_RATE_LIMITED,
+			return GSResult.fail(
+				GSError.CODE_RATE_LIMITED,
 				"Slow down.",
 				"%.2f s of %.2f s" % [elapsed, limits.spawn_interval]
 			)
 
 	if limits.world_budget > 0 and world_cost() + def.cost > limits.world_budget:
-		return DotResult.fail(
-			DotError.CODE_QUOTA,
+		return GSResult.fail(
+			GSError.CODE_QUOTA,
 			"The server is at its prop limit.",
 			"%d of %d" % [world_cost(), limits.world_budget]
 		)
@@ -425,8 +425,8 @@ func may_spawn(def: DotPropDef, player_id: StringName) -> DotResult:
 		var mine := player_cost(player_id)
 
 		if mine + def.cost > budget:
-			return DotResult.fail(
-				DotError.CODE_QUOTA,
+			return GSResult.fail(
+				GSError.CODE_QUOTA,
 				"You are at your prop limit.",
 				"%d of %d" % [mine, budget]
 			)
@@ -441,13 +441,13 @@ func may_spawn(def: DotPropDef, player_id: StringName) -> DotResult:
 			# Named, because "you are at your limit" with a budget left over reads as the
 			# server being wrong; "you have 10 of 10 npcs" says which limit and how to get
 			# under it.
-			return DotResult.fail(
-				DotError.CODE_QUOTA,
+			return GSResult.fail(
+				GSError.CODE_QUOTA,
 				"You have reached your %s limit (%d)." % [String(group), cap],
 				"%d of %d %s" % [have, cap, String(group)]
 			)
 
-	return DotResult.success(null)
+	return GSResult.success(null)
 
 
 ## Whether a player may freeze another prop.
@@ -456,22 +456,22 @@ func may_spawn(def: DotPropDef, player_id: StringName) -> DotResult:
 ## a builder should be allowed more of them than a physics budget would give. Counted
 ## over what they actually own, not tracked as a running total, because a running
 ## total drifts the moment a prop is removed by anything that did not decrement it.
-func may_freeze(player_id: StringName) -> DotResult:
+func may_freeze(player_id: StringName) -> GSResult:
 	var cap := limit_for(player_id, LIMIT_FROZEN)
 
 	if cap <= 0:
-		return DotResult.success(null)
+		return GSResult.success(null)
 
 	var frozen := frozen_count(player_id)
 
 	if frozen >= cap:
-		return DotResult.fail(
-			DotError.CODE_QUOTA,
+		return GSResult.fail(
+			GSError.CODE_QUOTA,
 			"You have frozen as many props as this server allows.",
 			"%d of %d" % [frozen, cap]
 		)
 
-	return DotResult.success(null)
+	return GSResult.success(null)
 
 
 ## How many of a player's props are frozen.
@@ -498,10 +498,10 @@ func remove(instance_id: int, reason: StringName = REASON_PLAYER) -> bool:
 
 	var found: Variant = _props.get(instance_id)
 
-	if not (found is DotPropInstance):
+	if not (found is GSPropInstance):
 		return false
 
-	var instance: DotPropInstance = found
+	var instance: GSPropInstance = found
 
 	_props.erase(instance_id)
 
@@ -584,8 +584,8 @@ func clear_all(reason: StringName = REASON_ADMIN) -> int:
 
 ## Owners whose props nobody else may act on: no tool, no gun, no damage. The building
 ## servers call it creative mode or build mode — somebody who wants to build in peace
-## while the rest of the server plays. Checked in [method DotPropTool.may_act_on] and
-## [method DotPropDamage.hurt], so every tool and every source of harm in this addon asks
+## while the rest of the server plays. Checked in [method GSPropTool.may_act_on] and
+## [method GSPropDamage.hurt], so every tool and every source of harm in this addon asks
 ## one set, whatever a server's "touch other people's props" rule says.
 ##
 ## [b]Here, not in a game, because the props are here.[/b] A game that kept its own set
@@ -611,7 +611,7 @@ func is_protected(player_id: StringName) -> bool:
 
 ## Whether [param actor] may act on [param prop]: always on their own, never on a
 ## protected owner's.
-func may_act_for(prop: DotPropInstance, actor: StringName) -> bool:
+func may_act_for(prop: GSPropInstance, actor: StringName) -> bool:
 	return prop == null or prop.owner_id == actor or not _protected.has(prop.owner_id)
 
 
@@ -634,7 +634,7 @@ func player_left(player_id: StringName) -> int:
 
 func _trim_undo(player_id: StringName) -> void:
 	if limits == null or limits.undo_depth < 0:
-		# -1 is DotPropLimits.UNDO_UNLIMITED: the history is never trimmed.
+		# -1 is GSPropLimits.UNDO_UNLIMITED: the history is never trimmed.
 		return
 
 	var stack: Array = _undo[player_id]
@@ -650,13 +650,13 @@ func _trim_undo(player_id: StringName) -> void:
 
 # --- Queries ---------------------------------------------------------------
 
-func get_prop(instance_id: int) -> DotPropInstance:
+func get_prop(instance_id: int) -> GSPropInstance:
 	var found: Variant = _props.get(instance_id)
-	return found if found is DotPropInstance else null
+	return found if found is GSPropInstance else null
 
 
 ## The prop a node belongs to, or null. For a tool that has hit something.
-func prop_for_node(node: Node) -> DotPropInstance:
+func prop_for_node(node: Node) -> GSPropInstance:
 	if node == null:
 		return null
 
@@ -667,7 +667,7 @@ func prop_for_node(node: Node) -> DotPropInstance:
 	while walk != null:
 		var found: Variant = _props.get(walk.get_instance_id())
 
-		if found is DotPropInstance:
+		if found is GSPropInstance:
 			return found
 
 		walk = walk.get_parent()
@@ -683,7 +683,7 @@ func world_cost() -> int:
 	var total := 0
 
 	for id in _props:
-		total += (_props[id] as DotPropInstance).def.cost
+		total += (_props[id] as GSPropInstance).def.cost
 
 	return total
 
@@ -704,8 +704,8 @@ func player_cost(player_id: StringName) -> int:
 	for id in (stack_value as Array):
 		var found: Variant = _props.get(int(id))
 
-		if found is DotPropInstance:
-			total += (found as DotPropInstance).def.cost
+		if found is GSPropInstance:
+			total += (found as GSPropInstance).def.cost
 
 	return total
 
@@ -716,11 +716,11 @@ func player_cost(player_id: StringName) -> int:
 ## remove, freeze or shove, and removing a prop mutates the list it came from — so
 ## handing out the internal one turns "clear everything in a radius" into a loop that
 ## skips every second prop. `clear_all` makes the same copy for the same reason.
-func all_props() -> Array[DotPropInstance]:
-	var out: Array[DotPropInstance] = []
+func all_props() -> Array[GSPropInstance]:
+	var out: Array[GSPropInstance] = []
 
 	for id in _props:
-		var prop: DotPropInstance = _props[id]
+		var prop: GSPropInstance = _props[id]
 
 		if prop.is_alive():
 			out.append(prop)
@@ -728,8 +728,8 @@ func all_props() -> Array[DotPropInstance]:
 	return out
 
 
-func props_of(player_id: StringName) -> Array[DotPropInstance]:
-	var out: Array[DotPropInstance] = []
+func props_of(player_id: StringName) -> Array[GSPropInstance]:
+	var out: Array[GSPropInstance] = []
 	var stack_value: Variant = _by_player.get(player_id, [])
 
 	if not (stack_value is Array):
@@ -738,18 +738,18 @@ func props_of(player_id: StringName) -> Array[DotPropInstance]:
 	for id in (stack_value as Array):
 		var found: Variant = _props.get(int(id))
 
-		if found is DotPropInstance:
+		if found is GSPropInstance:
 			out.append(found)
 
 	return out
 
 
-func _resolve_world() -> DotResult:
+func _resolve_world() -> GSResult:
 	if world_ref == null:
-		return DotResult.success(self)
+		return GSResult.success(self)
 
 	if _world != null and is_instance_valid(_world):
-		return DotResult.success(_world)
+		return GSResult.success(_world)
 
 	var resolved := world_ref.resolve(self)
 
@@ -758,7 +758,7 @@ func _resolve_world() -> DotResult:
 
 	_world = resolved.value
 
-	return DotResult.success(_world)
+	return GSResult.success(_world)
 
 
 func describe() -> Dictionary:

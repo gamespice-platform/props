@@ -1,8 +1,8 @@
 # Models as props
 
-`DotPropModel` and `DotPropFolder` turn a `.glb` or `.gltf` file into a `DotPropDef` with no code, so a game's menu can offer real objects and a player or operator can add their own by copying a file.
+`GSPropModel` and `GSPropFolder` turn a `.glb` or `.gltf` file into a `GSPropDef` with no code, so a game's menu can offer real objects and a player or operator can add their own by copying a file.
 
-## DotPropModel
+## GSPropModel
 
 - `measure(path, scale, shape_name)` loads a model once and returns `{extent, offset, shape, scale}`: the size in metres after scaling, the offset that centres the model on the body, and the collision shape. The shape is a single convex hull (`convex`), or a primitive (`box`, `sphere`, `cylinder`) when the hull would be a bad fit. A trimesh is never made: a dynamic body cannot use one. A flat or thin model gets a minimum-thickness box, because a hull of a plane has no volume and tunnels through a floor.
 - `visual(path, scale, offset)` is a fresh copy for a body to carry. The scale goes on a holder node above the meshes, never on the body (a scaled `RigidBody3D` has a physics scale the solver does not apply to its mass).
@@ -10,7 +10,7 @@
 - `repair_textures` gives a material that lost its texture the `Textures/colormap.png` beside the model, which is the delivery trap every vendored kit meets: inside a mounted pack the texture path the importer recorded does not exist.
 - A model that measures under 4 cm or over 40 m is refused (`size_ok`), and so is a file over 16 MB.
 
-## DotPropFolder
+## GSPropFolder
 
 `load_into(catalogue, dir, scene_path, options)` reads `dir` and adds one prop per model, all built on `scene_path` (the game's one prop scene). A folder that does not exist is not an error. Returns `{added, problems}`.
 

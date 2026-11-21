@@ -32,34 +32,34 @@ func _check(ok: bool, what: String, detail: String = "") -> void:
 		print("  FAIL  %s" % line)
 
 
-func _catalogue() -> DotPropCatalogue:
-	var catalogue := DotPropCatalogue.new()
+func _catalogue() -> GSPropCatalogue:
+	var catalogue := GSPropCatalogue.new()
 
-	var crate := DotPropDef.make(&"crate", "res://fixtures/prop_body.tscn")
+	var crate := GSPropDef.make(&"crate", "res://fixtures/prop_body.tscn")
 	crate.category = &"props"
 	crate.mass = 20.0
 	catalogue.add(crate)
 
-	var heavy := DotPropDef.make(&"safe", "res://fixtures/prop_body.tscn")
+	var heavy := GSPropDef.make(&"safe", "res://fixtures/prop_body.tscn")
 	heavy.category = &"props"
 	heavy.mass = 900.0
 	heavy.cost = 8
 	catalogue.add(heavy)
 
-	var scenery := DotPropDef.make(&"pillar", "res://fixtures/prop_body.tscn")
+	var scenery := GSPropDef.make(&"pillar", "res://fixtures/prop_body.tscn")
 	scenery.category = &"scenery"
 	scenery.can_grab = false
 	scenery.can_freeze = false
 	catalogue.add(scenery)
 
-	# A 2D prop in the same catalogue on purpose: a DotPropDef says nothing about dimension,
+	# A 2D prop in the same catalogue on purpose: a GSPropDef says nothing about dimension,
 	# so the spawner must pick the right entry point rather than infer one.
-	var bench := DotPropDef.make(&"bench", "res://fixtures/prop_body_2d.tscn")
+	var bench := GSPropDef.make(&"bench", "res://fixtures/prop_body_2d.tscn")
 	bench.category = &"furniture"
 	bench.mass = 55.0
 	catalogue.add(bench)
 
-	var locked := DotPropDef.make(&"gold_crate", "res://fixtures/prop_body.tscn")
+	var locked := GSPropDef.make(&"gold_crate", "res://fixtures/prop_body.tscn")
 	locked.category = &"premium"
 	locked.entitlement = &"vip"
 	catalogue.add(locked)
@@ -67,10 +67,10 @@ func _catalogue() -> DotPropCatalogue:
 	return catalogue
 
 
-func _spawner(limits: DotPropLimits = null) -> DotPropSpawner:
-	var spawner := DotPropSpawner.new()
+func _spawner(limits: GSPropLimits = null) -> GSPropSpawner:
+	var spawner := GSPropSpawner.new()
 	spawner.catalogue = _catalogue()
-	spawner.limits = limits if limits != null else DotPropLimits.new()
+	spawner.limits = limits if limits != null else GSPropLimits.new()
 	spawner.authoritative = true
 	_world.add_child(spawner)
 	return spawner
@@ -79,29 +79,29 @@ func _spawner(limits: DotPropLimits = null) -> DotPropSpawner:
 # Definitions
 
 
-func _damage_node(spawner: DotPropSpawner) -> DotPropDamage:
-	var damage := DotPropDamage.new()
+func _damage_node(spawner: GSPropSpawner) -> GSPropDamage:
+	var damage := GSPropDamage.new()
 	damage.authoritative = true
 	spawner.add_child(damage)
 	return damage
 
 
-func _breakables() -> DotPropCatalogue:
+func _breakables() -> GSPropCatalogue:
 	var catalogue := _catalogue()
 
-	var box := DotPropDef.make(&"box", "res://fixtures/prop_body.tscn")
+	var box := GSPropDef.make(&"box", "res://fixtures/prop_body.tscn")
 	box.max_health = 100.0
 	box.break_impact_speed = 12.0
 	catalogue.add(box)
 
-	var barrel := DotPropDef.make(&"barrel", "res://fixtures/prop_body.tscn")
+	var barrel := GSPropDef.make(&"barrel", "res://fixtures/prop_body.tscn")
 	barrel.max_health = 20.0
 	barrel.explode_radius = 6.0
 	barrel.explode_damage = 90.0
 	barrel.explode_force = 400.0
 	catalogue.add(barrel)
 
-	var anvil := DotPropDef.make(&"anvil", "res://fixtures/prop_body.tscn")
+	var anvil := GSPropDef.make(&"anvil", "res://fixtures/prop_body.tscn")
 	anvil.rideable = false
 	catalogue.add(anvil)
 
@@ -134,7 +134,7 @@ func _toy_world(authoritative: bool) -> Array:
 	shape.position = Vector3(0, -0.5, 0)
 	floor_body.add_child(shape)
 	holder.add_child(floor_body)
-	var toys := DotPropBodyBox.new()
+	var toys := GSPropBodyBox.new()
 	toys.authoritative = authoritative
 	toys.draw = true
 	# world 1, loose 2, solid 4, footprints 8.
@@ -145,7 +145,7 @@ func _toy_world(authoritative: bool) -> Array:
 	toys.footprint_layer = 8
 	toys.aim_mask = 1 | 2 | 4
 	holder.add_child(toys)
-	toys.catalogue = DotPropBodyCatalogue.stock()
+	toys.catalogue = GSPropBodyCatalogue.stock()
 	var placements: Array = []
 	var x := 0.0
 	for id in toys.catalogue.ids():
@@ -160,7 +160,7 @@ func _toy_world(authoritative: bool) -> Array:
 	return [holder, toys, built]
 
 
-func _index(toys: DotPropBodyBox, id: String) -> int:
+func _index(toys: GSPropBodyBox, id: String) -> int:
 	for t in toys.toys:
 		if String(t.def["id"]) == id:
 			return t.index
@@ -174,7 +174,7 @@ func _step_physics(frames: int) -> void:
 
 func _scatter_box(count: int) -> Array:
 	var made := _toy_world(true)
-	var toys: DotPropBodyBox = made[1]
+	var toys: GSPropBodyBox = made[1]
 	toys.clear()
 	var ids := toys.catalogue.ids()
 	var rng := RandomNumberGenerator.new()

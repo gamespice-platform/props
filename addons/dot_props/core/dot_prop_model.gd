@@ -1,5 +1,5 @@
 @tool
-class_name DotPropModel
+class_name GSPropModel
 extends RefCounted
 
 ## A model file (.glb or .gltf) turned into something a rigid body can wear: the picture, a
@@ -13,7 +13,7 @@ extends RefCounted
 ## [b]Collision is one convex hull, never the triangles.[/b] A concave (trimesh) shape is for
 ## static scenery: on a dynamic body it is refused by the engines this family runs on, and
 ## on a static one it catches a sliding character on every seam. A hull is solid where a
-## chair is not, which is the price, and what [DotPropPieces] exists to spend for the few
+## chair is not, which is the price, and what [GSPropPieces] exists to spend for the few
 ## props where it matters (it needs a measuring pass; this does not). [code]box[/code],
 ## [code]sphere[/code] and [code]cylinder[/code] are fitted to the model's box instead, for a
 ## sidecar that knows better.
@@ -52,12 +52,12 @@ static var _cache: Dictionary = {}
 
 ## Loads the model at [param path] as a fresh [Node3D] the caller owns. Fails on a file that
 ## is missing, unreadable, or not a model.
-static func load_scene(path: String) -> DotResult:
+static func load_scene(path: String) -> GSResult:
 	var root: Node = null
 
 	if path.begins_with("res://") or path.begins_with("uid://"):
 		if not ResourceLoader.exists(path):
-			return DotResult.fail(DotError.CODE_IO, "No model there.", path)
+			return GSResult.fail(GSError.CODE_IO, "No model there.", path)
 
 		var res: Resource = load(path)
 
@@ -69,22 +69,22 @@ static func load_scene(path: String) -> DotResult:
 		var err := doc.append_from_file(path, state, 0, path.get_base_dir())
 
 		if err != OK:
-			return DotResult.fail(
-				DotError.CODE_PARSE, "That model could not be read.", "%s (%s)" % [path, error_string(err)]
+			return GSResult.fail(
+				GSError.CODE_PARSE, "That model could not be read.", "%s (%s)" % [path, error_string(err)]
 			)
 
 		root = doc.generate_scene(state)
 	else:
-		return DotResult.fail(DotError.CODE_IO, "No model there.", path)
+		return GSResult.fail(GSError.CODE_IO, "No model there.", path)
 
 	if not (root is Node3D):
 		if root != null:
 			root.free()
-		return DotResult.fail(DotError.CODE_PARSE, "That file is not a 3D model.", path)
+		return GSResult.fail(GSError.CODE_PARSE, "That file is not a 3D model.", path)
 
 	repair_textures(root, path)
 
-	return DotResult.success(root)
+	return GSResult.success(root)
 
 
 ## Gives a material that lost its texture the one beside the model.
@@ -118,7 +118,7 @@ static func repair_textures(root: Node, model_path: String) -> int:
 				atlas = _texture(atlas_path)
 
 				if atlas == null:
-					DotLog.warn(CHANNEL, "the colour atlas exists but could not be loaded", {"path": atlas_path})
+					GSLog.warn(CHANNEL, "the colour atlas exists but could not be loaded", {"path": atlas_path})
 					return repaired
 
 			var copy := material.duplicate() as BaseMaterial3D
@@ -236,11 +236,11 @@ static func _thin(all: PackedVector3Array) -> PackedVector3Array:
 ## its box is centred on the body), "shape": Shape3D, "scale": float }[/code], or a failure.
 ## Cached by path, scale and shape: forty crates are one measurement, one shape. The scene
 ## itself is not cached, because a node can have one parent.
-static func measure(path: String, scale: float, shape_name: String = "convex") -> DotResult:
+static func measure(path: String, scale: float, shape_name: String = "convex") -> GSResult:
 	var key := "%s|%.4f|%s" % [path, scale, shape_name]
 
 	if _cache.has(key):
-		return DotResult.success(_cache[key])
+		return GSResult.success(_cache[key])
 
 	var loaded := load_scene(path)
 
@@ -252,7 +252,7 @@ static func measure(path: String, scale: float, shape_name: String = "convex") -
 
 	if box.size.length() <= 0.0:
 		root.free()
-		return DotResult.fail(DotError.CODE_INVALID, "That model has no mesh.", path)
+		return GSResult.fail(GSError.CODE_INVALID, "That model has no mesh.", path)
 
 	var extent := box.size * scale
 	var offset := -(box.position + box.size * 0.5) * scale
@@ -262,7 +262,7 @@ static func measure(path: String, scale: float, shape_name: String = "convex") -
 	var info := {"extent": extent, "offset": offset, "shape": shape, "scale": scale}
 	_cache[key] = info
 
-	return DotResult.success(info)
+	return GSResult.success(info)
 
 
 ## A fresh copy of the model, scaled and centred as [method measure] says, ready to be a

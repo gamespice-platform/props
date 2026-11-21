@@ -1,5 +1,5 @@
-class_name DotPhysGun
-extends DotPropTool
+class_name GSPhysGun
+extends GSPropTool
 
 ## The physics gun: hold a prop in front of you, move it, turn it, freeze it.
 ##
@@ -11,7 +11,7 @@ extends DotPropTool
 ## the prop should be, which is a force the solver understands — the prop pushes what
 ## is in the way, stops against a wall, and carries its momentum when let go.
 ##
-## [b]Server-side, always.[/b] Props are not predicted (see [DotPropSpawner]), so the
+## [b]Server-side, always.[/b] Props are not predicted (see [GSPropSpawner]), so the
 ## gun runs where the physics runs. The client sends where it is aiming and draws the
 ## beam to wherever the prop turns out to be, which is a frame or two behind and looks
 ## exactly right because the prop is [i]supposed[/i] to lag the aim.
@@ -42,7 +42,7 @@ var max_speed: float = 60.0
 var push_speed: float = 12.0
 
 ## The prop in hand, or null.
-var held: DotPropInstance = null
+var held: GSPropInstance = null
 
 ## How far in front of the player it is being held.
 var hold_distance: float = 6.0
@@ -57,24 +57,24 @@ var hold_rotation: Basis = Basis.IDENTITY
 ## Whether the player is currently rotating the prop instead of turning their view.
 var rotating: bool = false
 
-## A prop was picked up. [b]Emitted after [member DotPropInstance.held_by] is set.[/b]
+## A prop was picked up. [b]Emitted after [member GSPropInstance.held_by] is set.[/b]
 ##
 ## This class had no signals at all, which meant a game could not react to any of the
 ## three state changes it makes. That is not a small gap: a held prop, a frozen prop and
-## a loose one want different collision layers — `DotPhysicsLayout.sandbox_3d` has
+## a loose one want different collision layers — `GSPhysicsLayout.sandbox_3d` has
 ## `held_prop` and `frozen_prop` rows for exactly that — and without a signal a game can
 ## only set the layer at spawn and then be wrong for the rest of the prop's life.
-signal grabbed(prop: DotPropInstance, wielder: StringName)
+signal grabbed(prop: GSPropInstance, wielder: StringName)
 
-## A prop was let go. Emitted after [member DotPropInstance.held_by] is cleared.
-signal released(prop: DotPropInstance, wielder: StringName)
+## A prop was let go. Emitted after [member GSPropInstance.held_by] is cleared.
+signal released(prop: GSPropInstance, wielder: StringName)
 
 ## A prop was frozen or thawed by THIS tool.
 ##
 ## [b]Not emitted by [method set_frozen], which is static and cannot emit anything.[/b] A
 ## game that calls the static directly is changing the state behind the tool's back and
 ## gets no signal — which is the honest report of what a static function can offer.
-signal freeze_changed(prop: DotPropInstance, frozen: bool)
+signal freeze_changed(prop: GSPropInstance, frozen: bool)
 
 
 ## Grabs whatever the tool is pointing at.
@@ -84,9 +84,9 @@ func grab(
 	direction: Vector3,
 	view: Basis,
 	can_touch_others: bool = true
-) -> DotResult:
+) -> GSResult:
 	if held != null:
-		return DotResult.fail(DotError.CODE_STATE, "Already holding something.")
+		return GSResult.fail(GSError.CODE_STATE, "Already holding something.")
 
 	var prop := target(space, origin, direction)
 	var allowed := may_act_on(prop, can_touch_others)
@@ -97,8 +97,8 @@ func grab(
 	var body := prop.body()
 
 	if body == null:
-		return DotResult.fail(
-			DotError.CODE_UNSUPPORTED,
+		return GSResult.fail(
+			GSError.CODE_UNSUPPORTED,
 			"That prop is not a RigidBody3D, so it cannot be held.",
 			String(prop.def.id)
 		)
@@ -125,7 +125,7 @@ func grab(
 	# Last, so a handler sees a prop that is fully held rather than half-grabbed.
 	grabbed.emit(prop, wielder)
 
-	return DotResult.success(prop)
+	return GSResult.success(prop)
 
 
 ## Moves the held prop toward where the player is aiming. Once per physics tick.
@@ -209,7 +209,7 @@ func push(amount: float, delta: float) -> void:
 ##
 ## The prop keeps whatever velocity the spring gave it, which is what makes throwing
 ## work and is the reason the spring exists.
-func release() -> DotPropInstance:
+func release() -> GSPropInstance:
 	if held == null:
 		return null
 
@@ -229,13 +229,13 @@ func release() -> DotPropInstance:
 ## The physics gun's other half: a builder positions a piece and freezes it, and the
 ## next one rests on it. Without freezing, a stack of anything falls over the moment
 ## it is let go.
-func freeze_held() -> DotResult:
+func freeze_held() -> GSResult:
 	if held == null:
-		return DotResult.fail(DotError.CODE_STATE, "Nothing in hand.")
+		return GSResult.fail(GSError.CODE_STATE, "Nothing in hand.")
 
 	if not held.def.can_freeze:
-		return DotResult.fail(
-			DotError.CODE_FORBIDDEN,
+		return GSResult.fail(
+			GSError.CODE_FORBIDDEN,
 			"That cannot be frozen.",
 			String(held.def.id)
 		)
@@ -254,7 +254,7 @@ func freeze_held() -> DotResult:
 	set_frozen(prop, true)
 	freeze_changed.emit(prop, true)
 
-	return DotResult.success(prop)
+	return GSResult.success(prop)
 
 
 ## Freezes or unfreezes a prop.
@@ -263,7 +263,7 @@ func freeze_held() -> DotResult:
 ## frozen body's velocities and applies them the instant it is unfrozen, so a prop
 ## frozen while moving fast leaps away when somebody thaws it — minutes later, with
 ## nothing to connect the two.
-static func set_frozen(prop: DotPropInstance, frozen: bool) -> void:
+static func set_frozen(prop: GSPropInstance, frozen: bool) -> void:
 	if prop == null or not prop.is_alive():
 		return
 
@@ -271,7 +271,7 @@ static func set_frozen(prop: DotPropInstance, frozen: bool) -> void:
 	# tool and nothing else here is, but freezing is the one prop operation a 2D game
 	# also needs — a lobby pins its furniture, a sandbox pins a wall — and a second
 	# copy of "zero the velocities, then set the mode" is a second thing that can
-	# forget the first half. See [method DotPropSpawner.spawn_2d].
+	# forget the first half. See [method GSPropSpawner.spawn_2d].
 	var body := prop.body()
 
 	if body != null:

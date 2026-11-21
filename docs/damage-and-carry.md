@@ -2,9 +2,9 @@
 
 Both were once listed as deliberately absent, and both came back when a game (mg-buses-from-hell) turned up that is about them: a crate you climb onto to escape a bus, and one you break with a hammer to deny somebody else the same. The old entries were right about the boundary and wrong about the gap.
 
-## `DotPropDamage` holds the health and applies none of it
+## `GSPropDamage` holds the health and applies none of it
 
-The numbers live on `DotPropDef` (`max_health`, `break_impact_speed`, `explode_radius`, `explode_damage`, `explode_force`) because a definition has to be checkable without loading the scene. The *state* lives in the `DotPropDamage` node, keyed by the instance id the spawner already hands out, so a breakable prop stays a plain scene with a `RigidBody3D` at its root. That matters: a script on the prop would have to resolve its own `class_name` at load, and a script inside a mounted GameSpice Cloud pack cannot.
+The numbers live on `GSPropDef` (`max_health`, `break_impact_speed`, `explode_radius`, `explode_damage`, `explode_force`) because a definition has to be checkable without loading the scene. The *state* lives in the `GSPropDamage` node, keyed by the instance id the spawner already hands out, so a breakable prop stays a plain scene with a `RigidBody3D` at its root. That matters: a script on the prop would have to resolve its own `class_name` at load, and a script inside a mounted GameSpice Cloud pack cannot.
 
 **When a barrel goes off, this addon describes the blast and stops.** `exploded` carries a centre, a radius, a damage and a force; GameSpice Combat's `explode()` turns that into hurt people, and the game connects the two. A damage model here would be a second set of rules about who a blast hurts, next to the one that already has hit groups, armour, team scales and falloff. The one thing it *does* apply is the shove to other props, because a prop is the only thing this addon knows about: a player, an NPC and a vehicle each need somebody else's id space and authority rules.
 
@@ -14,9 +14,9 @@ The numbers live on `DotPropDef` (`max_health`, `break_impact_speed`, `explode_r
 
 ## A character motor does not touch a rigid body
 
-`DotPropCarry` is the half that makes a crate an object rather than scenery that happens to be a `RigidBody3D`. `DotFpsMotor`, and every motor like it, sweeps a shape and slides along what it hits, so a crate is exactly as solid as the floor and exactly as immovable: a player stands on one and it does not sink, does not tip, and does not carry them anywhere when something shoves it out from under them. **Every number involved is correct.** There is nothing to notice except standing on a crate and expecting something.
+`GSPropCarry` is the half that makes a crate an object rather than scenery that happens to be a `RigidBody3D`. `GSFpsMotor`, and every motor like it, sweeps a shape and slides along what it hits, so a crate is exactly as solid as the floor and exactly as immovable: a player stands on one and it does not sink, does not tip, and does not carry them anywhere when something shoves it out from under them. **Every number involved is correct.** There is nothing to notice except standing on a crate and expecting something.
 
-It lives outside the motor on purpose, and the motor already publishes what it needs: `DotFpsState.ground_id` is the instance id of the collider underfoot, a local physics handle that is deliberately *not* part of the simulation. So riding is resolved per frame on each machine from a handle each machine has, rather than becoming another predicted field two machines would have to agree about, which they could not, for the same reason props are not predicted at all.
+It lives outside the motor on purpose, and the motor already publishes what it needs: `GSFpsState.ground_id` is the instance id of the collider underfoot, a local physics handle that is deliberately *not* part of the simulation. So riding is resolved per frame on each machine from a handle each machine has, rather than becoming another predicted field two machines would have to agree about, which they could not, for the same reason props are not predicted at all.
 
 - **The carried velocity includes the angular part.** A prop that is only sliding moves every point on it at the same speed. A prop that is *turning* moves a player on its edge much faster than its centre, and taking only the linear part makes them drift slowly toward the middle, with no error anywhere.
 - **`weight_scale` is not 1.0**, because a swept capsule is not a physics body. A real body resting on a crate settles into an equilibrium the solver finds; a character is teleported to its new position every tick and never settles, so the full weight makes a crate somebody is standing perfectly still on accelerate away downward for ever.
@@ -31,4 +31,4 @@ Two timing facts that each cost a test more than once:
 **A physics assertion that does not say what it is excluding is measuring gravity.** The check that a crate outside a blast is *not* shoved passed a falling crate at 0.16 m/s, which was one tick of gravity.
 
 
-**Break effects.** `DotPropDef.material` (glass, wood, metal, stone, plastic; default wood) says what the prop is made of. A game wires the splinters, shards and sound once: `damage.broken.connect(func(prop, at, _by): fx_break.burst(prop.def.material, at))` with a `DotFxBreak` from GameSpice FX. GameSpice Props does not depend on GameSpice FX.
+**Break effects.** `GSPropDef.material` (glass, wood, metal, stone, plastic; default wood) says what the prop is made of. A game wires the splinters, shards and sound once: `damage.broken.connect(func(prop, at, _by): fx_break.burst(prop.def.material, at))` with a `GSFxBreak` from GameSpice FX. GameSpice Props does not depend on GameSpice FX.

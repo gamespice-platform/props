@@ -1,6 +1,6 @@
 @tool
-class_name DotPropLimits
-extends DotConfig
+class_name GSPropLimits
+extends GSConfig
 
 ## What a player may spawn, and how much of it.
 ##
@@ -9,14 +9,14 @@ extends DotConfig
 ## something, and the server's physics step goes from two milliseconds to two hundred.
 ## Every limit here exists because a sandbox server without it has the same afternoon.
 ##
-## A [DotConfig], so an operator changes it in a file or on the command line without a
+## A [GSConfig], so an operator changes it in a file or on the command line without a
 ## rebuild — which is what actually happens the evening a server falls over.
 
 @export_group("Per player")
 
 ## Most props one player may have in the world at once. 0 = unlimited.
 ##
-## Counted in [member DotPropDef.cost] rather than in props, so a server can make one
+## Counted in [member GSPropDef.cost] rather than in props, so a server can make one
 ## expensive model count for ten without reclassifying it.
 @export_range(0, 1000, 1) var per_player_budget: int = 64
 
@@ -35,20 +35,20 @@ extends DotConfig
 ## because "how much may I build" and "how much may I have moving" are two questions
 ## a server operator wants to answer differently.
 ##
-## Enforced by [method DotPhysGun.freeze_held]; a game freezing props by some other
-## route checks it with [method DotPropSpawner.may_freeze].
+## Enforced by [method GSPhysGun.freeze_held]; a game freezing props by some other
+## route checks it with [method GSPropSpawner.may_freeze].
 @export_range(0, 1000, 1) var per_player_frozen: int = 128
 
-## The largest prop that may be spawned. See [enum DotPropDef.Size].
+## The largest prop that may be spawned. See [enum GSPropDef.Size].
 ##
 ## [b]A size class rather than a cost, because they answer different questions.[/b]
 ## `cost` is a budget — twenty small props or two big ones. This is a ceiling: a
 ## server can allow a hundred crates and forbid the one model that is the size of the
 ## map, without having to price it at a hundred.
-@export var max_size: DotPropDef.Size = DotPropDef.Size.HUGE
+@export var max_size: GSPropDef.Size = GSPropDef.Size.HUGE
 
 ## How many of each limit group one player may have at once, by group name — see
-## [member DotPropDef.limit_group]. A group not named here, or 0, is not limited by count.
+## [member GSPropDef.limit_group]. A group not named here, or 0, is not limited by count.
 ##
 ## [codeblock]
 ## {"props": 200, "npcs": 10, "vehicles": 4, "balloons": 30, "weapons": 20}
@@ -109,17 +109,17 @@ func cli_prefix() -> String:
 	return "--props-"
 
 
-func validate() -> DotResult:
+func validate() -> GSResult:
 	if undo_depth < UNDO_UNLIMITED:
-		return DotResult.fail(
-			DotError.CODE_INVALID,
+		return GSResult.fail(
+			GSError.CODE_INVALID,
 			"undo_depth must be 0 (no undo), -1 (unlimited) or a positive depth.",
 			"%d" % undo_depth
 		)
 
 	if hold_distance_min > hold_distance_max:
-		return DotResult.fail(
-			DotError.CODE_INVALID,
+		return GSResult.fail(
+			GSError.CODE_INVALID,
 			"hold_distance_min must not exceed hold_distance_max.",
 			"%.1f .. %.1f" % [hold_distance_min, hold_distance_max]
 		)
@@ -127,13 +127,13 @@ func validate() -> DotResult:
 	if grab_range < hold_distance_max:
 		# Not fatal, but it makes the maximum hold distance unreachable, which reads
 		# as the push control being broken rather than as two numbers disagreeing.
-		return DotResult.fail(
-			DotError.CODE_INVALID,
+		return GSResult.fail(
+			GSError.CODE_INVALID,
 			"grab_range must be at least hold_distance_max, or a held prop cannot be pushed to its limit.",
 			"%.1f vs %.1f" % [grab_range, hold_distance_max]
 		)
 
-	return DotResult.success(null)
+	return GSResult.success(null)
 
 
 func describe_summary() -> String:

@@ -1,9 +1,9 @@
-class_name DotPropDisguiseRules
+class_name GSPropDisguiseRules
 extends Resource
 
 ## What a server allows a player hiding as a prop: how big a thing they may become, how much it
 ## takes to kill them as it, how close they must be to copy it, and what showing themselves
-## costs. Read by [DotPropDisguise]; a game fills it from its own configuration.
+## costs. Read by [GSPropDisguise]; a game fills it from its own configuration.
 ##
 ## [b]Health follows size, but not in proportion to volume.[/b] A filing cabinet is a hundred
 ## and fifty times a bottle's volume, and a cabinet that took a hundred and fifty times as many
@@ -71,18 +71,18 @@ extends Resource
 @export_range(0.0, 600.0, 1.0) var reveal_paid_seconds: float = 20.0
 
 
-func validate() -> DotResult:
+func validate() -> GSResult:
 	if min_health > max_health:
-		return DotResult.fail(DotError.CODE_INVALID, "min_health is over max_health")
+		return GSResult.fail(GSError.CODE_INVALID, "min_health is over max_health")
 
 	if hull_min_radius > hull_max_radius or hull_min_height > hull_max_height:
-		return DotResult.fail(DotError.CODE_INVALID, "a hull minimum is over its maximum")
+		return GSResult.fail(GSError.CODE_INVALID, "a hull minimum is over its maximum")
 
 	if hull_min_height < hull_min_radius * 2.0:
-		return DotResult.fail(DotError.CODE_INVALID,
+		return GSResult.fail(GSError.CODE_INVALID,
 			"hull_min_height must be at least twice hull_min_radius: a capsule cannot be shorter than it is wide")
 
-	return DotResult.success(null)
+	return GSResult.success(null)
 
 
 func describe() -> Dictionary:

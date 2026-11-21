@@ -1,4 +1,4 @@
-class_name DotPropInstance
+class_name GSPropInstance
 extends RefCounted
 
 ## One prop in the world: its definition, its node, and who put it there.
@@ -7,9 +7,9 @@ extends RefCounted
 ## to anything that did not put it there, survives into a saved scene, and is
 ## unreachable once the node is freed — and the one moment ownership matters most is
 ## when a prop is being removed. Keeping it beside the node means
-## [DotPropSpawner.removed] can say whose it was after the node has gone.
+## [GSPropSpawner.removed] can say whose it was after the node has gone.
 
-var def: DotPropDef = null
+var def: GSPropDef = null
 
 ## The node in the world. May be freed; check with [method is_alive].
 ##
@@ -17,7 +17,7 @@ var def: DotPropDef = null
 ## The catalogue, the budgets, the undo stack and the ownership rules are all
 ## dimension-free — they are about who put what in the world and what it cost — and the
 ## only 3D thing about a prop is its transform. A 2D game spawning through
-## [method DotPropSpawner.spawn_2d] gets a [Node2D] here and everything else works
+## [method GSPropSpawner.spawn_2d] gets a [Node2D] here and everything else works
 ## unchanged; [method body] and [method position] still answer for a 3D one, and
 ## [method body_2d] / [method position_2d] are their counterparts.
 var node: Node = null
@@ -79,7 +79,7 @@ func body_2d() -> RigidBody2D:
 ##
 ## Asked rather than assumed: a host holding a mixed catalogue — which is what a game
 ## with a 2D world and a 3D menu preview is — cannot tell from the definition, because
-## a [DotPropDef] deliberately says nothing about dimension. The node knows.
+## a [GSPropDef] deliberately says nothing about dimension. The node knows.
 func is_2d() -> bool:
 	return node is Node2D
 
@@ -107,6 +107,6 @@ func describe() -> Dictionary:
 
 
 func _to_string() -> String:
-	return "DotPropInstance(%s by %s)" % [
+	return "GSPropInstance(%s by %s)" % [
 		String(def.id) if def != null else "?", String(owner_id)
 	]

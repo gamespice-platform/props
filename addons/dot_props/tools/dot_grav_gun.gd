@@ -1,9 +1,9 @@
-class_name DotGravGun
-extends DotPropTool
+class_name GSGravGun
+extends GSPropTool
 
 ## The gravity gun: pull a prop to you, carry it in front of you, and punt it.
 ##
-## [b]The difference from [DotPhysGun] is what it is for, and it is not a smaller
+## [b]The difference from [GSPhysGun] is what it is for, and it is not a smaller
 ## physics gun.[/b] A physics gun is a building tool — arbitrary distance, free
 ## rotation, freezing, and a deliberately soft spring so a piece can be placed
 ## precisely. A gravity gun is a weapon and a toy: one fixed carrying position, a
@@ -31,7 +31,7 @@ var punt_impulse: float = 2200.0
 
 ## How far a punt reaches when nothing is carried, in metres.
 ##
-## Shorter than [member DotPropTool.reach], because punting something across the map
+## Shorter than [member GSPropTool.reach], because punting something across the map
 ## is a griefing tool rather than a mechanic.
 var punt_range: float = 14.0
 
@@ -39,7 +39,7 @@ var punt_range: float = 14.0
 var punt_at_range_scale: float = 0.6
 
 ## The prop being carried, or null.
-var carried: DotPropInstance = null
+var carried: GSPropInstance = null
 
 
 ## Pulls in whatever the tool is pointing at.
@@ -48,9 +48,9 @@ func pull(
 	origin: Vector3,
 	direction: Vector3,
 	can_touch_others: bool = true
-) -> DotResult:
+) -> GSResult:
 	if carried != null:
-		return DotResult.fail(DotError.CODE_STATE, "Already carrying something.")
+		return GSResult.fail(GSError.CODE_STATE, "Already carrying something.")
 
 	var prop := target(space, origin, direction)
 	var allowed := may_act_on(prop, can_touch_others)
@@ -61,8 +61,8 @@ func pull(
 	var body := prop.body()
 
 	if body == null:
-		return DotResult.fail(
-			DotError.CODE_UNSUPPORTED,
+		return GSResult.fail(
+			GSError.CODE_UNSUPPORTED,
 			"That prop is not a RigidBody3D.",
 			String(prop.def.id)
 		)
@@ -72,14 +72,14 @@ func pull(
 		# it grabs because freezing is its own tool and un-freezing is the obvious
 		# undo; a gravity gun that quietly unfroze somebody's build would take a
 		# tower apart one piece at a time.
-		return DotResult.fail(
-			DotError.CODE_STATE, "That is frozen in place."
+		return GSResult.fail(
+			GSError.CODE_STATE, "That is frozen in place."
 		)
 
 	carried = prop
 	prop.held_by = wielder
 
-	return DotResult.success(prop)
+	return GSResult.success(prop)
 
 
 ## Keeps the carried prop in front of the player. Once per physics tick.
@@ -117,7 +117,7 @@ func punt(
 	origin: Vector3,
 	direction: Vector3,
 	can_touch_others: bool = true
-) -> DotPropInstance:
+) -> GSPropInstance:
 	var aim := direction.normalized()
 
 	if carried != null:
@@ -160,7 +160,7 @@ func punt(
 
 
 ## Puts down what is carried, keeping whatever velocity it has.
-func drop() -> DotPropInstance:
+func drop() -> GSPropInstance:
 	if carried == null:
 		return null
 

@@ -1,12 +1,12 @@
 extends Node3D
 
-## The half of [DotPropBody] that builds it: the state it keeps and the bodies, joints and looks each
-## kind is made of. No class_name, so [DotPropBody] reaches it by relative path.
+## The half of [GSPropBody] that builds it: the state it keeps and the bodies, joints and looks each
+## kind is made of. No class_name, so [GSPropBody] reaches it by relative path.
 
 ## A sound to play at a point: a bounce, a knock, a press. [param strength] is 0..1.
 signal sound(id: StringName, at: Vector3, strength: float)
 
-## The definition this was built from ([method DotPropBodyCatalogue.get_def]).
+## The definition this was built from ([method GSPropBodyCatalogue.get_def]).
 var def: Dictionary = {}
 var kind: StringName = &""
 
@@ -42,7 +42,7 @@ var rest: Transform3D = Transform3D.IDENTITY
 ## untouched to sleep first.
 var touched_at: float = -INF
 
-## Seconds the moving part has been at rest while awake, for [member DotPropBodyBox.sleep_after].
+## Seconds the moving part has been at rest while awake, for [member GSPropBodyBox.sleep_after].
 var still_for: float = 0.0
 
 ## Collision: loose kinds go on `loose`, everything else (and every fixed part) on `solid`.
@@ -74,7 +74,7 @@ func _colour(i: int) -> Color:
 
 
 func _mat(i: int, rough: float = 0.75) -> StandardMaterial3D:
-	return DotPropBodyLook.material(_colour(i), rough)
+	return GSPropBodyLook.material(_colour(i), rough)
 
 
 ## The moving part: a rigid body at [param at] (this toy's frame), on the loose or the solid
@@ -173,18 +173,18 @@ func _build_ball() -> void:
 		return
 	var colours: Array = def.get("colours", [])
 	var diameter := Vector3.ONE * r * 2.0
-	if colours.size() < 3 and DotPropBodyLook.add_model(look, "ball_bowling" if float(def.get("mass", 1.0)) > 3.0 else "ball", diameter, colours) != null:
+	if colours.size() < 3 and GSPropBodyLook.add_model(look, "ball_bowling" if float(def.get("mass", 1.0)) > 3.0 else "ball", diameter, colours) != null:
 		return
 	if colours.size() >= 3:
-		var _m := DotPropBodyLook.add(look, DotPropBodyLook.painted_sphere(r, colours), DotPropBodyLook.painted())
+		var _m := GSPropBodyLook.add(look, GSPropBodyLook.painted_sphere(r, colours), GSPropBodyLook.painted())
 	elif float(def.get("mass", 1.0)) > 3.0:
 		# Heavy and polished, with its three holes.
-		var _m := DotPropBodyLook.add(look, DotPropBodyLook.sphere(r, 20), _mat(0, 0.2))
+		var _m := GSPropBodyLook.add(look, GSPropBodyLook.sphere(r, 20), _mat(0, 0.2))
 		for i in 3:
 			var at := Vector3(0.22 * (i - 1) * r, 0.55 * r, 0.8 * r + (0.05 * r if i == 1 else 0.0))
-			var _h := DotPropBodyLook.add(look, DotPropBodyLook.sphere(r * 0.13, 8), _mat(1), Transform3D(Basis.IDENTITY, at))
+			var _h := GSPropBodyLook.add(look, GSPropBodyLook.sphere(r * 0.13, 8), _mat(1), Transform3D(Basis.IDENTITY, at))
 	else:
-		var _m := DotPropBodyLook.add(look, DotPropBodyLook.painted_sphere(r, colours if colours.size() >= 2 else [_colour(0), _colour(0)], true), DotPropBodyLook.painted())
+		var _m := GSPropBodyLook.add(look, GSPropBodyLook.painted_sphere(r, colours if colours.size() >= 2 else [_colour(0), _colour(0)], true), GSPropBodyLook.painted())
 
 
 func _build_pin() -> void:
@@ -198,12 +198,12 @@ func _build_pin() -> void:
 	var look := _look_on(b)
 	if look == null:
 		return
-	if DotPropBodyLook.add_model(look, "pin", Vector3(r * 2.0, h, r * 2.0), def.get("colours", [])) != null:
+	if GSPropBodyLook.add_model(look, "pin", Vector3(r * 2.0, h, r * 2.0), def.get("colours", [])) != null:
 		return
-	var _belly := DotPropBodyLook.add(look, DotPropBodyLook.cylinder(r * 0.6, h * 0.55, r), _mat(0, 0.3), Transform3D(Basis.IDENTITY, Vector3(0, -h * 0.22, 0)))
-	var _neck := DotPropBodyLook.add(look, DotPropBodyLook.cylinder(r * 0.45, h * 0.3, r * 0.95), _mat(0, 0.3), Transform3D(Basis.IDENTITY, Vector3(0, h * 0.18, 0)))
-	var _band := DotPropBodyLook.add(look, DotPropBodyLook.cylinder(r * 0.5, h * 0.06), _mat(1, 0.3), Transform3D(Basis.IDENTITY, Vector3(0, h * 0.14, 0)))
-	var _head := DotPropBodyLook.add(look, DotPropBodyLook.sphere(r * 0.6, 12), _mat(0, 0.3), Transform3D(Basis.IDENTITY, Vector3(0, h * 0.38, 0)))
+	var _belly := GSPropBodyLook.add(look, GSPropBodyLook.cylinder(r * 0.6, h * 0.55, r), _mat(0, 0.3), Transform3D(Basis.IDENTITY, Vector3(0, -h * 0.22, 0)))
+	var _neck := GSPropBodyLook.add(look, GSPropBodyLook.cylinder(r * 0.45, h * 0.3, r * 0.95), _mat(0, 0.3), Transform3D(Basis.IDENTITY, Vector3(0, h * 0.18, 0)))
+	var _band := GSPropBodyLook.add(look, GSPropBodyLook.cylinder(r * 0.5, h * 0.06), _mat(1, 0.3), Transform3D(Basis.IDENTITY, Vector3(0, h * 0.14, 0)))
+	var _head := GSPropBodyLook.add(look, GSPropBodyLook.sphere(r * 0.6, 12), _mat(0, 0.3), Transform3D(Basis.IDENTITY, Vector3(0, h * 0.38, 0)))
 
 
 func _build_barrel() -> void:
@@ -215,12 +215,12 @@ func _build_barrel() -> void:
 	var look := _look_on(b)
 	if look == null:
 		return
-	if DotPropBodyLook.add_model(look, "barrel", Vector3(r * 2.0, h, r * 2.0), def.get("colours", [])) != null:
+	if GSPropBodyLook.add_model(look, "barrel", Vector3(r * 2.0, h, r * 2.0), def.get("colours", [])) != null:
 		return
-	var _staves := DotPropBodyLook.add(look, DotPropBodyLook.cylinder(r, h, -1.0, 14), _mat(0))
+	var _staves := GSPropBodyLook.add(look, GSPropBodyLook.cylinder(r, h, -1.0, 14), _mat(0))
 	for y: float in [-0.32, 0.32]:
-		var _hoop := DotPropBodyLook.add(look, DotPropBodyLook.torus(r * 0.97, r * 1.04), _mat(1, 0.4), Transform3D(Basis.IDENTITY, Vector3(0, h * y, 0)))
-	var _lid := DotPropBodyLook.add(look, DotPropBodyLook.cylinder(r * 0.92, 0.01), DotPropBodyLook.material(_colour(0).darkened(0.25)), Transform3D(Basis.IDENTITY, Vector3(0, h * 0.5, 0)))
+		var _hoop := GSPropBodyLook.add(look, GSPropBodyLook.torus(r * 0.97, r * 1.04), _mat(1, 0.4), Transform3D(Basis.IDENTITY, Vector3(0, h * y, 0)))
+	var _lid := GSPropBodyLook.add(look, GSPropBodyLook.cylinder(r * 0.92, 0.01), GSPropBodyLook.material(_colour(0).darkened(0.25)), Transform3D(Basis.IDENTITY, Vector3(0, h * 0.5, 0)))
 
 
 func _build_crate() -> void:
@@ -230,10 +230,10 @@ func _build_crate() -> void:
 	var look := _look_on(b)
 	if look == null:
 		return
-	if DotPropBodyLook.add_model(look, "crate", _size, def.get("colours", [])) != null:
+	if GSPropBodyLook.add_model(look, "crate", _size, def.get("colours", [])) != null:
 		return
-	var _planks := DotPropBodyLook.add(look, DotPropBodyLook.box(_size), _mat(0))
-	var _band := DotPropBodyLook.add(look, DotPropBodyLook.box(Vector3(_size.x + 0.01, _size.y * 0.18, _size.z + 0.01)), _mat(1, 0.9))
+	var _planks := GSPropBodyLook.add(look, GSPropBodyLook.box(_size), _mat(0))
+	var _band := GSPropBodyLook.add(look, GSPropBodyLook.box(Vector3(_size.x + 0.01, _size.y * 0.18, _size.z + 0.01)), _mat(1, 0.9))
 
 
 func _build_tyre() -> void:
@@ -247,10 +247,10 @@ func _build_tyre() -> void:
 	var look := _look_on(b)
 	if look == null:
 		return
-	if DotPropBodyLook.add_model(look, "tyre", Vector3(w, r * 2.0, r * 2.0), def.get("colours", [])) != null:
+	if GSPropBodyLook.add_model(look, "tyre", Vector3(w, r * 2.0, r * 2.0), def.get("colours", [])) != null:
 		return
-	var _rubber := DotPropBodyLook.add(look, DotPropBodyLook.torus(r * 0.5, r), _mat(0, 0.9), Transform3D(axle.scaled(Vector3(1.0, w / (r * 0.5), 1.0)), Vector3.ZERO))
-	var _hub := DotPropBodyLook.add(look, DotPropBodyLook.cylinder(r * 0.5, w * 0.5), _mat(1, 0.4), Transform3D(axle, Vector3.ZERO))
+	var _rubber := GSPropBodyLook.add(look, GSPropBodyLook.torus(r * 0.5, r), _mat(0, 0.9), Transform3D(axle.scaled(Vector3(1.0, w / (r * 0.5), 1.0)), Vector3.ZERO))
+	var _hub := GSPropBodyLook.add(look, GSPropBodyLook.cylinder(r * 0.5, w * 0.5), _mat(1, 0.4), Transform3D(axle, Vector3.ZERO))
 
 
 func _build_bag() -> void:
@@ -271,15 +271,15 @@ func _build_bag() -> void:
 	var _s := _shape(b, capsule)
 	if draw:
 		var steel := _mat(1, 0.4)
-		var _p := DotPropBodyLook.rod(_visual, post_at, post_at + Vector3(0, top + 0.1, 0), 0.07, steel)
-		var _a := DotPropBodyLook.rod(_visual, post_at + Vector3(0, top + 0.05, 0), Vector3(0.05, top + 0.05, 0), 0.05, steel)
-		var _ft := DotPropBodyLook.add(_visual, DotPropBodyLook.box(Vector3(0.7, 0.08, 0.7)), steel, Transform3D(Basis.IDENTITY, post_at + Vector3(0, 0.04, 0)))
+		var _p := GSPropBodyLook.rod(_visual, post_at, post_at + Vector3(0, top + 0.1, 0), 0.07, steel)
+		var _a := GSPropBodyLook.rod(_visual, post_at + Vector3(0, top + 0.05, 0), Vector3(0.05, top + 0.05, 0), 0.05, steel)
+		var _ft := GSPropBodyLook.add(_visual, GSPropBodyLook.box(Vector3(0.7, 0.08, 0.7)), steel, Transform3D(Basis.IDENTITY, post_at + Vector3(0, 0.04, 0)))
 		var look := _look_on(b)
-		var _c := DotPropBodyLook.rod(look, Vector3(0, h * 0.5, 0), Vector3(0, hang, 0), 0.015, steel)
-		if DotPropBodyLook.add_model(look, "bag", Vector3(r * 2.2, h, r * 2.2), def.get("colours", [])) != null:
+		var _c := GSPropBodyLook.rod(look, Vector3(0, h * 0.5, 0), Vector3(0, hang, 0), 0.015, steel)
+		if GSPropBodyLook.add_model(look, "bag", Vector3(r * 2.2, h, r * 2.2), def.get("colours", [])) != null:
 			return
-		var _bag := DotPropBodyLook.add(look, DotPropBodyLook.cylinder(r, h, -1.0, 14), _mat(0, 0.6))
-		var _cap := DotPropBodyLook.add(look, DotPropBodyLook.cylinder(r * 1.02, 0.12), steel, Transform3D(Basis.IDENTITY, Vector3(0, h * 0.5 - 0.06, 0)))
+		var _bag := GSPropBodyLook.add(look, GSPropBodyLook.cylinder(r, h, -1.0, 14), _mat(0, 0.6))
+		var _cap := GSPropBodyLook.add(look, GSPropBodyLook.cylinder(r * 1.02, 0.12), steel, Transform3D(Basis.IDENTITY, Vector3(0, h * 0.5 - 0.06, 0)))
 
 
 func _build_swing() -> void:
@@ -301,19 +301,19 @@ func _build_swing() -> void:
 	var _s := _shape(b, _box_shape(seat))
 	if draw:
 		var colours: Array = def.get("colours", [])
-		var framed := DotPropBodyLook.add_model(_visual, "swing_frame", Vector3(w + 0.1, top + 0.06, 1.6), colours, Vector3(0, (top + 0.06) * 0.5, 0)) != null
-		var seated := DotPropBodyLook.add_model(_look_on(b), "swing_seat", Vector3(seat.x, rope + 0.03, seat.z), colours, Vector3(0, (rope - 0.03) * 0.5, 0)) != null
+		var framed := GSPropBodyLook.add_model(_visual, "swing_frame", Vector3(w + 0.1, top + 0.06, 1.6), colours, Vector3(0, (top + 0.06) * 0.5, 0)) != null
+		var seated := GSPropBodyLook.add_model(_look_on(b), "swing_seat", Vector3(seat.x, rope + 0.03, seat.z), colours, Vector3(0, (rope - 0.03) * 0.5, 0)) != null
 		if not framed:
 			var frame := _mat(0, 0.5)
 			for side: float in [-1.0, 1.0]:
 				for leg: float in [-1.0, 1.0]:
-					var _l := DotPropBodyLook.rod(_visual, Vector3(side * w * 0.5, 0, leg * 0.75), Vector3(side * w * 0.5, top, 0), 0.05, frame)
-			var _b := DotPropBodyLook.rod(_visual, Vector3(-w * 0.5 - 0.05, top, 0), Vector3(w * 0.5 + 0.05, top, 0), 0.06, frame)
+					var _l := GSPropBodyLook.rod(_visual, Vector3(side * w * 0.5, 0, leg * 0.75), Vector3(side * w * 0.5, top, 0), 0.05, frame)
+			var _b := GSPropBodyLook.rod(_visual, Vector3(-w * 0.5 - 0.05, top, 0), Vector3(w * 0.5 + 0.05, top, 0), 0.06, frame)
 		if not seated:
 			var look := _look_on(b)
-			var _seat := DotPropBodyLook.add(look, DotPropBodyLook.box(seat), _mat(1, 0.6))
+			var _seat := GSPropBodyLook.add(look, GSPropBodyLook.box(seat), _mat(1, 0.6))
 			for side: float in [-1.0, 1.0]:
-				var _r := DotPropBodyLook.rod(look, Vector3(side * seat.x * 0.45, 0, 0), Vector3(side * seat.x * 0.45, rope, 0), 0.012, _mat(2))
+				var _r := GSPropBodyLook.rod(look, Vector3(side * seat.x * 0.45, 0, 0), Vector3(side * seat.x * 0.45, rope, 0), 0.012, _mat(2))
 
 
 func _build_seesaw() -> void:
@@ -330,17 +330,17 @@ func _build_seesaw() -> void:
 	_limit = asin(clampf((pivot - 0.02) / (length * 0.5), 0.0, 1.0))
 	if draw:
 		var colours: Array = def.get("colours", [])
-		if DotPropBodyLook.add_model(_visual, "seesaw_base", Vector3(0.64, pivot, width * 0.85), colours, Vector3(0, pivot * 0.5, 0)) == null:
-			var _pv := DotPropBodyLook.add(_visual, _prism(Vector3(0.6, pivot, width * 0.7)), _mat(1), Transform3D(Basis.IDENTITY, Vector3(0, pivot * 0.5, 0)))
+		if GSPropBodyLook.add_model(_visual, "seesaw_base", Vector3(0.64, pivot, width * 0.85), colours, Vector3(0, pivot * 0.5, 0)) == null:
+			var _pv := GSPropBodyLook.add(_visual, _prism(Vector3(0.6, pivot, width * 0.7)), _mat(1), Transform3D(Basis.IDENTITY, Vector3(0, pivot * 0.5, 0)))
 		var look := _look_on(b)
-		if DotPropBodyLook.add_model(look, "seesaw_plank", Vector3(length, 0.465, width), colours, Vector3(0, 0.2425, 0)) != null:
+		if GSPropBodyLook.add_model(look, "seesaw_plank", Vector3(length, 0.465, width), colours, Vector3(0, 0.2425, 0)) != null:
 			return
-		var _p := DotPropBodyLook.add(look, DotPropBodyLook.box(Vector3(length, 0.1, width)), _mat(0, 0.6), Transform3D(Basis.IDENTITY, Vector3(0, 0.06, 0)))
+		var _p := GSPropBodyLook.add(look, GSPropBodyLook.box(Vector3(length, 0.1, width)), _mat(0, 0.6), Transform3D(Basis.IDENTITY, Vector3(0, 0.06, 0)))
 		for side: float in [-1.0, 1.0]:
 			var x := side * (length * 0.5 - 0.45)
-			var _h := DotPropBodyLook.rod(look, Vector3(x, 0.1, -width * 0.35), Vector3(x, 0.45, -width * 0.35), 0.025, _mat(1, 0.4))
-			var _h2 := DotPropBodyLook.rod(look, Vector3(x, 0.1, width * 0.35), Vector3(x, 0.45, width * 0.35), 0.025, _mat(1, 0.4))
-			var _t := DotPropBodyLook.rod(look, Vector3(x, 0.45, -width * 0.35), Vector3(x, 0.45, width * 0.35), 0.025, _mat(1, 0.4))
+			var _h := GSPropBodyLook.rod(look, Vector3(x, 0.1, -width * 0.35), Vector3(x, 0.45, -width * 0.35), 0.025, _mat(1, 0.4))
+			var _h2 := GSPropBodyLook.rod(look, Vector3(x, 0.1, width * 0.35), Vector3(x, 0.45, width * 0.35), 0.025, _mat(1, 0.4))
+			var _t := GSPropBodyLook.rod(look, Vector3(x, 0.45, -width * 0.35), Vector3(x, 0.45, width * 0.35), 0.025, _mat(1, 0.4))
 
 
 static func _prism(size: Vector3) -> PrismMesh:
@@ -360,18 +360,18 @@ func _build_spinner() -> void:
 	_sense_local = Vector3(r, 0, 0)
 	if draw:
 		var look := _look_on(b)
-		var _hub0 := DotPropBodyLook.add(_visual, DotPropBodyLook.cylinder(0.15, deck - 0.06), _mat(2, 0.4), Transform3D(Basis.IDENTITY, Vector3(0, (deck - 0.06) * 0.5, 0)))
-		if DotPropBodyLook.add_model(look, "roundabout", Vector3(r * 2.0, 1.13, r * 2.0), def.get("colours", []), Vector3(0, 0.465, 0)) != null:
+		var _hub0 := GSPropBodyLook.add(_visual, GSPropBodyLook.cylinder(0.15, deck - 0.06), _mat(2, 0.4), Transform3D(Basis.IDENTITY, Vector3(0, (deck - 0.06) * 0.5, 0)))
+		if GSPropBodyLook.add_model(look, "roundabout", Vector3(r * 2.0, 1.13, r * 2.0), def.get("colours", []), Vector3(0, 0.465, 0)) != null:
 			return
 		# Eight sectors in the first two colours, painted on one disc.
-		var _deck := DotPropBodyLook.add(look, DotPropBodyLook.painted_disc(r, 0.1, [_colour(0), _colour(1)], 8), DotPropBodyLook.painted(), Transform3D(Basis.IDENTITY, Vector3(0, -0.05, 0)))
+		var _deck := GSPropBodyLook.add(look, GSPropBodyLook.painted_disc(r, 0.1, [_colour(0), _colour(1)], 8), GSPropBodyLook.painted(), Transform3D(Basis.IDENTITY, Vector3(0, -0.05, 0)))
 		var rail := _mat(2, 0.4)
 		for i in 4:
 			var a := TAU * float(i) / 4.0 + PI * 0.25
 			var foot := Vector3(cos(a), 0, sin(a)) * r * 0.8
-			var _u := DotPropBodyLook.rod(look, foot, foot + Vector3(0, 0.75, 0), 0.03, rail)
-			var _i := DotPropBodyLook.rod(look, foot + Vector3(0, 0.75, 0), Vector3(0, 0.95, 0), 0.025, rail)
-		var _top := DotPropBodyLook.add(look, DotPropBodyLook.sphere(0.08, 8), rail, Transform3D(Basis.IDENTITY, Vector3(0, 0.95, 0)))
+			var _u := GSPropBodyLook.rod(look, foot, foot + Vector3(0, 0.75, 0), 0.03, rail)
+			var _i := GSPropBodyLook.rod(look, foot + Vector3(0, 0.75, 0), Vector3(0, 0.95, 0), 0.025, rail)
+		var _top := GSPropBodyLook.add(look, GSPropBodyLook.sphere(0.08, 8), rail, Transform3D(Basis.IDENTITY, Vector3(0, 0.95, 0)))
 
 
 func _build_wobble() -> void:
@@ -384,10 +384,10 @@ func _build_wobble() -> void:
 	_sense_local = Vector3(_size.x * 0.5, 0, 0)
 	_limit = WOBBLE_MOST
 	if draw:
-		var _p := DotPropBodyLook.add(_visual, DotPropBodyLook.cylinder(0.12, height - 0.12), _mat(1, 0.4), Transform3D(Basis.IDENTITY, Vector3(0, (height - 0.12) * 0.5, 0)))
+		var _p := GSPropBodyLook.add(_visual, GSPropBodyLook.cylinder(0.12, height - 0.12), _mat(1, 0.4), Transform3D(Basis.IDENTITY, Vector3(0, (height - 0.12) * 0.5, 0)))
 		var look := _look_on(b)
-		var _top := DotPropBodyLook.add(look, DotPropBodyLook.box(Vector3(_size.x, 0.15, _size.z)), _mat(0, 0.6))
-		var _edge := DotPropBodyLook.add(look, DotPropBodyLook.box(Vector3(_size.x * 1.02, 0.05, _size.z * 1.02)), _mat(1, 0.5), Transform3D(Basis.IDENTITY, Vector3(0, -0.07, 0)))
+		var _top := GSPropBodyLook.add(look, GSPropBodyLook.box(Vector3(_size.x, 0.15, _size.z)), _mat(0, 0.6))
+		var _edge := GSPropBodyLook.add(look, GSPropBodyLook.box(Vector3(_size.x * 1.02, 0.05, _size.z * 1.02)), _mat(1, 0.5), Transform3D(Basis.IDENTITY, Vector3(0, -0.07, 0)))
 
 
 # Driven kinds are an angle or two integrated here and a kinematic body posed from them, not
@@ -436,24 +436,24 @@ func _build_bouncer() -> void:
 		var a := TAU * float(i) / 4.0 + PI * 0.25
 		var _leg := _shape(f, _box_shape(Vector3(0.08, top, 0.08)), Transform3D(Basis.IDENTITY, Vector3(cos(a) * r * 0.9, top * 0.5, sin(a) * r * 0.9)))
 	if draw:
-		if DotPropBodyLook.add_model(_visual, "trampoline", Vector3(r * 2.0, top + 0.084, r * 2.0), def.get("colours", []), Vector3(0, (top + 0.084) * 0.5, 0)) == null:
+		if GSPropBodyLook.add_model(_visual, "trampoline", Vector3(r * 2.0, top + 0.084, r * 2.0), def.get("colours", []), Vector3(0, (top + 0.084) * 0.5, 0)) == null:
 			for i in 4:
 				var a := TAU * float(i) / 4.0 + PI * 0.25
-				var _l := DotPropBodyLook.rod(_visual, Vector3(cos(a) * r * 0.9, 0, sin(a) * r * 0.9), Vector3(cos(a) * r * 0.9, top, sin(a) * r * 0.9), 0.04, _mat(0, 0.4))
-			var _rim := DotPropBodyLook.add(_visual, DotPropBodyLook.torus(r * 0.86, r), _mat(1, 0.6), Transform3D(Basis.IDENTITY, Vector3(0, top, 0)))
-		_flourish = DotPropBodyLook.add(_visual, DotPropBodyLook.cylinder(r * 0.87, 0.03, -1.0, 24), _mat(0, 0.9), Transform3D(Basis.IDENTITY, Vector3(0, top - 0.02, 0)))
+				var _l := GSPropBodyLook.rod(_visual, Vector3(cos(a) * r * 0.9, 0, sin(a) * r * 0.9), Vector3(cos(a) * r * 0.9, top, sin(a) * r * 0.9), 0.04, _mat(0, 0.4))
+			var _rim := GSPropBodyLook.add(_visual, GSPropBodyLook.torus(r * 0.86, r), _mat(1, 0.6), Transform3D(Basis.IDENTITY, Vector3(0, top, 0)))
+		_flourish = GSPropBodyLook.add(_visual, GSPropBodyLook.cylinder(r * 0.87, 0.03, -1.0, 24), _mat(0, 0.9), Transform3D(Basis.IDENTITY, Vector3(0, top - 0.02, 0)))
 
 
 func _build_pad() -> void:
 	var f := _make_fixed()
 	var _slab := _shape(f, _box_shape(_size), Transform3D(Basis.IDENTITY, Vector3(0, _size.y * 0.5, 0)))
 	if draw:
-		if DotPropBodyLook.add_model(_visual, "pad", Vector3(_size.x, _size.y + 0.007, _size.z), def.get("colours", []), Vector3(0, (_size.y + 0.007) * 0.5, 0)) == null:
-			var _base := DotPropBodyLook.add(_visual, DotPropBodyLook.box(_size), _mat(0, 0.5), Transform3D(Basis.IDENTITY, Vector3(0, _size.y * 0.5, 0)))
+		if GSPropBodyLook.add_model(_visual, "pad", Vector3(_size.x, _size.y + 0.007, _size.z), def.get("colours", []), Vector3(0, (_size.y + 0.007) * 0.5, 0)) == null:
+			var _base := GSPropBodyLook.add(_visual, GSPropBodyLook.box(_size), _mat(0, 0.5), Transform3D(Basis.IDENTITY, Vector3(0, _size.y * 0.5, 0)))
 		# An arrow along the way it throws (+z), lying on the top.
-		var arrow := DotPropBodyLook.material(_colour(1), 0.5, 0.6)
-		var _shaft := DotPropBodyLook.add(_visual, DotPropBodyLook.box(Vector3(_size.x * 0.18, 0.02, _size.z * 0.45)), arrow, Transform3D(Basis.IDENTITY, Vector3(0, _size.y + 0.01, -_size.z * 0.12)))
-		_flourish = DotPropBodyLook.add(_visual, _prism(Vector3(_size.x * 0.55, _size.z * 0.3, 0.02)), arrow,
+		var arrow := GSPropBodyLook.material(_colour(1), 0.5, 0.6)
+		var _shaft := GSPropBodyLook.add(_visual, GSPropBodyLook.box(Vector3(_size.x * 0.18, 0.02, _size.z * 0.45)), arrow, Transform3D(Basis.IDENTITY, Vector3(0, _size.y + 0.01, -_size.z * 0.12)))
+		_flourish = GSPropBodyLook.add(_visual, _prism(Vector3(_size.x * 0.55, _size.z * 0.3, 0.02)), arrow,
 			Transform3D(Basis(Vector3.RIGHT, PI * 0.5), Vector3(0, _size.y + 0.01, _size.z * 0.22)))
 
 
@@ -461,18 +461,18 @@ func _build_post(height: float, width: float, hidden: bool = false) -> void:
 	var f := _make_fixed()
 	var _post := _shape(f, _box_shape(Vector3(width, height, width)), Transform3D(Basis.IDENTITY, Vector3(0, height * 0.5, 0)))
 	if draw and not hidden:
-		var _p := DotPropBodyLook.add(_visual, DotPropBodyLook.box(Vector3(width, height, width)), _mat(0, 0.5), Transform3D(Basis.IDENTITY, Vector3(0, height * 0.5, 0)))
+		var _p := GSPropBodyLook.add(_visual, GSPropBodyLook.box(Vector3(width, height, width)), _mat(0, 0.5), Transform3D(Basis.IDENTITY, Vector3(0, height * 0.5, 0)))
 
 
 func _build_switch() -> void:
-	var modelled := draw and DotPropBodyLook.add_model(_visual, "switch", Vector3(_size.x * 1.82, _size.y + 0.05, _size.z * 1.82), def.get("colours", []), Vector3(0, (_size.y + 0.05) * 0.5, 0)) != null
+	var modelled := draw and GSPropBodyLook.add_model(_visual, "switch", Vector3(_size.x * 1.82, _size.y + 0.05, _size.z * 1.82), def.get("colours", []), Vector3(0, (_size.y + 0.05) * 0.5, 0)) != null
 	_build_post(_size.y, _size.x, modelled)
 	# The button is what a person aims the use key at: solid, over the post's top.
 	var _button := _shape(fixed, _box_shape(Vector3(_size.x * 1.3, 0.16, _size.z * 1.3)), Transform3D(Basis.IDENTITY, Vector3(0, _size.y + 0.08, 0)))
 	if draw and not modelled:
-		var _plate := DotPropBodyLook.add(_visual, DotPropBodyLook.box(Vector3(_size.x * 1.3, 0.04, _size.z * 1.3)), _mat(0, 0.4), Transform3D(Basis.IDENTITY, Vector3(0, _size.y + 0.02, 0)))
+		var _plate := GSPropBodyLook.add(_visual, GSPropBodyLook.box(Vector3(_size.x * 1.3, 0.04, _size.z * 1.3)), _mat(0, 0.4), Transform3D(Basis.IDENTITY, Vector3(0, _size.y + 0.02, 0)))
 	if draw:
-		_cap = DotPropBodyLook.add(_visual, DotPropBodyLook.cylinder(_size.x * 0.4, 0.08), _mat(1, 0.3), Transform3D(Basis.IDENTITY, Vector3(0, _size.y + 0.08, 0)))
+		_cap = GSPropBodyLook.add(_visual, GSPropBodyLook.cylinder(_size.x * 0.4, 0.08), _mat(1, 0.3), Transform3D(Basis.IDENTITY, Vector3(0, _size.y + 0.08, 0)))
 
 
 func _build_lamp() -> void:
@@ -480,11 +480,11 @@ func _build_lamp() -> void:
 	var _post := _shape(f, _box_shape(Vector3(0.14, _size.y, 0.14)), Transform3D(Basis.IDENTITY, Vector3(0, _size.y * 0.5, 0)))
 	if draw:
 		var tall := _size.y + 0.2
-		if DotPropBodyLook.add_model(_visual, "lamp", Vector3(0.34, tall, 0.34), def.get("colours", []), Vector3(0, tall * 0.5, 0)) == null:
-			var _p := DotPropBodyLook.rod(_visual, Vector3.ZERO, Vector3(0, _size.y, 0), 0.06, _mat(0, 0.4))
-			var _foot := DotPropBodyLook.add(_visual, DotPropBodyLook.cylinder(0.16, 0.12), _mat(0, 0.4), Transform3D(Basis.IDENTITY, Vector3(0, 0.06, 0)))
-			var _hood := DotPropBodyLook.add(_visual, DotPropBodyLook.cylinder(0.08, 0.16, 0.24), _mat(0, 0.4), Transform3D(Basis.IDENTITY, Vector3(0, _size.y + 0.1, 0)))
-		_bulb = DotPropBodyLook.add(_visual, DotPropBodyLook.sphere(0.13, 12), _mat(1), Transform3D(Basis.IDENTITY, Vector3(0, _size.y - 0.04, 0)))
+		if GSPropBodyLook.add_model(_visual, "lamp", Vector3(0.34, tall, 0.34), def.get("colours", []), Vector3(0, tall * 0.5, 0)) == null:
+			var _p := GSPropBodyLook.rod(_visual, Vector3.ZERO, Vector3(0, _size.y, 0), 0.06, _mat(0, 0.4))
+			var _foot := GSPropBodyLook.add(_visual, GSPropBodyLook.cylinder(0.16, 0.12), _mat(0, 0.4), Transform3D(Basis.IDENTITY, Vector3(0, 0.06, 0)))
+			var _hood := GSPropBodyLook.add(_visual, GSPropBodyLook.cylinder(0.08, 0.16, 0.24), _mat(0, 0.4), Transform3D(Basis.IDENTITY, Vector3(0, _size.y + 0.1, 0)))
+		_bulb = GSPropBodyLook.add(_visual, GSPropBodyLook.sphere(0.13, 12), _mat(1), Transform3D(Basis.IDENTITY, Vector3(0, _size.y - 0.04, 0)))
 		_light = OmniLight3D.new()
 		_light.light_color = _colour(1)
 		_light.omni_range = 7.0
@@ -502,12 +502,12 @@ func _build_fountain() -> void:
 	var _spout := _shape(f, _cyl_shape(0.1, 0.6), Transform3D(Basis.IDENTITY, Vector3(0, h + 0.3, 0)))
 	if draw:
 		var stone := _mat(0, 0.9)
-		var modelled := DotPropBodyLook.add_model(_visual, "fountain_basin", Vector3(r * 2.0, h, r * 2.0), def.get("colours", []), Vector3(0, h * 0.5, 0)) != null
+		var modelled := GSPropBodyLook.add_model(_visual, "fountain_basin", Vector3(r * 2.0, h, r * 2.0), def.get("colours", []), Vector3(0, h * 0.5, 0)) != null
 		if not modelled:
-			var _wall := DotPropBodyLook.add(_visual, DotPropBodyLook.cylinder(r, h, -1.0, 24), stone, Transform3D(Basis.IDENTITY, Vector3(0, h * 0.5, 0)))
-		_water = DotPropBodyLook.add(_visual, DotPropBodyLook.cylinder(r * 0.88, 0.02, -1.0, 24), DotPropBodyLook.material(_colour(1), 0.1), Transform3D(Basis.IDENTITY, Vector3(0, h + 0.005, 0)))
-		if not modelled or DotPropBodyLook.add_model(_visual, "fountain_column", Vector3(0.5, 0.6, 0.5), def.get("colours", []), Vector3(0, h + 0.3, 0)) == null:
-			var _col := DotPropBodyLook.add(_visual, DotPropBodyLook.cylinder(0.1, 0.6, 0.07), stone, Transform3D(Basis.IDENTITY, Vector3(0, h + 0.3, 0)))
+			var _wall := GSPropBodyLook.add(_visual, GSPropBodyLook.cylinder(r, h, -1.0, 24), stone, Transform3D(Basis.IDENTITY, Vector3(0, h * 0.5, 0)))
+		_water = GSPropBodyLook.add(_visual, GSPropBodyLook.cylinder(r * 0.88, 0.02, -1.0, 24), GSPropBodyLook.material(_colour(1), 0.1), Transform3D(Basis.IDENTITY, Vector3(0, h + 0.005, 0)))
+		if not modelled or GSPropBodyLook.add_model(_visual, "fountain_column", Vector3(0.5, 0.6, 0.5), def.get("colours", []), Vector3(0, h + 0.3, 0)) == null:
+			var _col := GSPropBodyLook.add(_visual, GSPropBodyLook.cylinder(0.1, 0.6, 0.07), stone, Transform3D(Basis.IDENTITY, Vector3(0, h + 0.3, 0)))
 		_jets = CPUParticles3D.new()
 		_jets.amount = 90
 		_jets.lifetime = 1.0
@@ -519,8 +519,8 @@ func _build_fountain() -> void:
 		_jets.gravity = Vector3(0, -9.8, 0)
 		_jets.scale_amount_min = 0.6
 		_jets.scale_amount_max = 1.0
-		var drop := DotPropBodyLook.sphere(0.035, 6)
-		drop.material = DotPropBodyLook.material(_colour(1).lightened(0.35), 0.1, 0.4)
+		var drop := GSPropBodyLook.sphere(0.035, 6)
+		drop.material = GSPropBodyLook.material(_colour(1).lightened(0.35), 0.1, 0.4)
 		_jets.mesh = drop
 		_visual.add_child(_jets)
 
@@ -529,12 +529,12 @@ func _build_horn() -> void:
 	_build_post(_size.y, 0.14)
 	if draw:
 		var brass := _mat(1, 0.3)
-		_flourish = DotPropBodyLook.add_model(_visual, "horn", Vector3(_size.x * 0.9, _size.x * 0.9, _size.z * 1.1), def.get("colours", []),
+		_flourish = GSPropBodyLook.add_model(_visual, "horn", Vector3(_size.x * 0.9, _size.x * 0.9, _size.z * 1.1), def.get("colours", []),
 			Vector3(0, _size.y + 0.05, _size.z * 0.4), Basis(Vector3.RIGHT, -PI * 0.5))
 		if _flourish == null:
-			_flourish = DotPropBodyLook.add(_visual, DotPropBodyLook.cylinder(_size.x * 0.45, _size.z * 1.1, 0.05, 16), brass,
+			_flourish = GSPropBodyLook.add(_visual, GSPropBodyLook.cylinder(_size.x * 0.45, _size.z * 1.1, 0.05, 16), brass,
 				Transform3D(Basis(Vector3.RIGHT, PI * 0.5), Vector3(0, _size.y + 0.05, _size.z * 0.4)))
-		var _bulb_ := DotPropBodyLook.add(_visual, DotPropBodyLook.sphere(0.12, 10), DotPropBodyLook.material(Color(0.12, 0.12, 0.12)), Transform3D(Basis.IDENTITY, Vector3(0, _size.y + 0.05, -0.18)))
+		var _bulb_ := GSPropBodyLook.add(_visual, GSPropBodyLook.sphere(0.12, 10), GSPropBodyLook.material(Color(0.12, 0.12, 0.12)), Transform3D(Basis.IDENTITY, Vector3(0, _size.y + 0.05, -0.18)))
 
 
 func _build_bell() -> void:
@@ -547,12 +547,12 @@ func _build_bell() -> void:
 	if draw:
 		var wood := _mat(0, 0.8)
 		for side: float in [-1.0, 1.0]:
-			var _p := DotPropBodyLook.add(_visual, DotPropBodyLook.box(Vector3(0.14, top, 0.14)), wood, Transform3D(Basis.IDENTITY, Vector3(side * w * 0.5, top * 0.5, 0)))
-		var _b := DotPropBodyLook.add(_visual, DotPropBodyLook.box(Vector3(w + 0.14, 0.14, 0.14)), wood, Transform3D(Basis.IDENTITY, Vector3(0, top, 0)))
+			var _p := GSPropBodyLook.add(_visual, GSPropBodyLook.box(Vector3(0.14, top, 0.14)), wood, Transform3D(Basis.IDENTITY, Vector3(side * w * 0.5, top * 0.5, 0)))
+		var _b := GSPropBodyLook.add(_visual, GSPropBodyLook.box(Vector3(w + 0.14, 0.14, 0.14)), wood, Transform3D(Basis.IDENTITY, Vector3(0, top, 0)))
 		_flourish = Node3D.new()
 		_flourish.position = Vector3(0, top - 0.07, 0)
 		_visual.add_child(_flourish)
-		if DotPropBodyLook.add_model(_flourish, "bell", Vector3(0.62, 0.52, 0.62), def.get("colours", []), Vector3(0, -0.28, 0)) == null:
-			var _bell := DotPropBodyLook.add(_flourish, DotPropBodyLook.cylinder(0.3, 0.42, 0.13, 16), _mat(1, 0.25), Transform3D(Basis.IDENTITY, Vector3(0, -0.3, 0)))
-		var _rope := DotPropBodyLook.rod(_flourish, Vector3(0, -0.5, 0), Vector3(0, -1.2, 0), 0.015, DotPropBodyLook.material(Color(0.8, 0.75, 0.6)))
+		if GSPropBodyLook.add_model(_flourish, "bell", Vector3(0.62, 0.52, 0.62), def.get("colours", []), Vector3(0, -0.28, 0)) == null:
+			var _bell := GSPropBodyLook.add(_flourish, GSPropBodyLook.cylinder(0.3, 0.42, 0.13, 16), _mat(1, 0.25), Transform3D(Basis.IDENTITY, Vector3(0, -0.3, 0)))
+		var _rope := GSPropBodyLook.rod(_flourish, Vector3(0, -0.5, 0), Vector3(0, -1.2, 0), 0.015, GSPropBodyLook.material(Color(0.8, 0.75, 0.6)))
 

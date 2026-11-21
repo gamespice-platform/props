@@ -11,12 +11,12 @@ Read the family [CLAUDE.md](../../CLAUDE.md) first; this file is only what is sp
 | Read | Before |
 | --- | --- |
 | [docs/README.md](docs/README.md) | the index |
-| [docs/spawning.md](docs/spawning.md) | the spawner, definitions, limits, groups, ownership, protection, `DotPropIO`, what is deliberately not here |
-| [docs/tools.md](docs/tools.md) | `DotPropTool`, `DotPhysGun`, `DotGravGun` |
-| [docs/damage-and-carry.md](docs/damage-and-carry.md) | `DotPropDamage`, `DotPropCarry`, any physics assertion |
-| [docs/hunt.md](docs/hunt.md) | `DotPropDisguise`, `DotPropTaunts` |
-| [docs/models.md](docs/models.md) | `DotPropModel`, `DotPropFolder`: a `.glb` and an optional JSON sidecar becoming a prop, and what is refused |
-| [docs/pieces.md](docs/pieces.md) | `DotPropPieces`, a map prop's collision, a game's measuring tool |
+| [docs/spawning.md](docs/spawning.md) | the spawner, definitions, limits, groups, ownership, protection, `GSPropIO`, what is deliberately not here |
+| [docs/tools.md](docs/tools.md) | `GSPropTool`, `GSPhysGun`, `GSGravGun` |
+| [docs/damage-and-carry.md](docs/damage-and-carry.md) | `GSPropDamage`, `GSPropCarry`, any physics assertion |
+| [docs/hunt.md](docs/hunt.md) | `GSPropDisguise`, `GSPropTaunts` |
+| [docs/models.md](docs/models.md) | `GSPropModel`, `GSPropFolder`: a `.glb` and an optional JSON sidecar becoming a prop, and what is refused |
+| [docs/pieces.md](docs/pieces.md) | `GSPropPieces`, a map prop's collision, a game's measuring tool |
 | [docs/toys.md](docs/toys.md) | anything in `toys/`, or a game placing or replicating toys |
 | [docs/history.md](docs/history.md) | the bugs, and how each looked |
 
@@ -24,11 +24,11 @@ Read the family [CLAUDE.md](../../CLAUDE.md) first; this file is only what is sp
 
 | Path | What |
 | --- | --- |
-| `addons/dot_props/core/` | `DotPropDef` (scene, size, mass, cost, entitlement, damage numbers), `DotPropInstance`, `DotPropCatalogue` (the JSON an operator edits), `DotPropLimits` (a layered `DotConfig`), `DotPropPieces` (collision shaped like the model), `DotPropModel` (measure a model into an extent and one convex hull), `DotPropFolder` (a folder of models into a catalogue) |
-| `addons/dot_props/runtime/` | `DotPropSpawner` (the node a game adds), `DotPropDamage`, `DotPropCarry`, `DotPropIO`; road hazards `DotPropBridge` (a deck that sags and falls, with a mirror mode), `DotPropRubble`, `DotPropLedge` (a rock outcrop pinching a road to a ledge) |
-| `addons/dot_props/hunt/` | `DotPropDisguiseRules`, `DotPropDisguise`, `DotPropTaunts` |
-| `addons/dot_props/tools/` | `DotPropTool` (reach, targeting, `may_act_on`), `DotPhysGun`, `DotGravGun`, `DotToolView` (the first-person model of a held tool or toy, API 8) |
-| `addons/dot_props/toys/` | `DotPropBodyCatalogue` (18 stock toys over 16 kinds, retuned from JSON), `DotPropBodyBox` (a map's toys, the awake cap, push/stand/use/hit/launch), `DotPropBody` (one, its bodies and look; the per-kind builders are its base script `dot_prop_toy_parts.gd`, no `class_name`), `DotPropBodyRules` (`sv_physprops*` (`sv_toys*` kept as aliases)), `DotPropBodySounds` (+ `sounds/`, CC0), `DotPropBodyLook` (code meshes, plus optional glb looks from `toys/models/`, built by `art-src/build_toy_models.py`) |
+| `addons/dot_props/core/` | `GSPropDef` (scene, size, mass, cost, entitlement, damage numbers), `GSPropInstance`, `GSPropCatalogue` (the JSON an operator edits), `GSPropLimits` (a layered `GSConfig`), `GSPropPieces` (collision shaped like the model), `GSPropModel` (measure a model into an extent and one convex hull), `GSPropFolder` (a folder of models into a catalogue) |
+| `addons/dot_props/runtime/` | `GSPropSpawner` (the node a game adds), `GSPropDamage`, `GSPropCarry`, `GSPropIO`; road hazards `GSPropBridge` (a deck that sags and falls, with a mirror mode), `GSPropRubble`, `GSPropLedge` (a rock outcrop pinching a road to a ledge) |
+| `addons/dot_props/hunt/` | `GSPropDisguiseRules`, `GSPropDisguise`, `GSPropTaunts` |
+| `addons/dot_props/tools/` | `GSPropTool` (reach, targeting, `may_act_on`), `GSPhysGun`, `GSGravGun`, `GSToolView` (the first-person model of a held tool or toy, API 8) |
+| `addons/dot_props/toys/` | `GSPropBodyCatalogue` (18 stock toys over 16 kinds, retuned from JSON), `GSPropBodyBox` (a map's toys, the awake cap, push/stand/use/hit/launch), `GSPropBody` (one, its bodies and look; the per-kind builders are its base script `dot_prop_toy_parts.gd`, no `class_name`), `GSPropBodyRules` (`sv_physprops*` (`sv_toys*` kept as aliases)), `GSPropBodySounds` (+ `sounds/`, CC0), `GSPropBodyLook` (code meshes, plus optional glb looks from `toys/models/`, built by `art-src/build_toy_models.py`) |
 | `fixtures/` | 3D and 2D prop bodies for the suite |
 | `examples/props_selftest.tscn` | the suite; spawns real `RigidBody3D`s into a real tree and checks every node is freed |
 | `examples/toy_gallery.tscn` | every stock toy rendered on a lawn (xvfb; `--kick` shows them moving) |
@@ -43,22 +43,22 @@ Read the family [CLAUDE.md](../../CLAUDE.md) first; this file is only what is sp
 
 ## Rules that bite
 
-- **`DotPropCatalogue.follow_content(index, kinds)` adds subscribed Workshop props, solo only, as "Name [Pack]"; the game's own ids win; empty kinds follow nothing; saving leaves them out.** [spawning](docs/spawning.md#workshop-props-follow_content)
+- **`GSPropCatalogue.follow_content(index, kinds)` adds subscribed Workshop props, solo only, as "Name [Pack]"; the game's own ids win; empty kinds follow nothing; saving leaves them out.** [spawning](docs/spawning.md#workshop-props-follow_content)
 - Props are server-authoritative and never predicted. Every mutating method checks `authoritative` first. [spawning](docs/spawning.md#props-are-server-authoritative-and-are-not-predicted)
-- A definition is checkable without its scene; numbers go on `DotPropDef`, never in a script on the prop (a pack's `class_name` does not resolve). [spawning](docs/spawning.md#a-definition-is-checkable-without-loading-the-scene)
-- `DotPropDef.mass` is assigned before the body enters the tree. [spawning](docs/spawning.md#a-definition-is-checkable-without-loading-the-scene)
+- A definition is checkable without its scene; numbers go on `GSPropDef`, never in a script on the prop (a pack's `class_name` does not resolve). [spawning](docs/spawning.md#a-definition-is-checkable-without-loading-the-scene)
+- `GSPropDef.mass` is assigned before the body enters the tree. [spawning](docs/spawning.md#a-definition-is-checkable-without-loading-the-scene)
 - `spawn` (3D) and `spawn_2d` stay separate; the wrong dimension is refused and freed. Write `instance.position()`, never `instance.node.global_position`. [spawning](docs/spawning.md#a-prop-is-not-always-a-3d-one)
 - Every limit has a reason; cooldowns run on simulated seconds advanced by the host, never a wall clock. [spawning](docs/spawning.md#the-limits-and-why-each-one-exists)
 - A refusal names the limit it hit; who gets more is `limit_resolver`, never this addon. [spawning](docs/spawning.md#counts-per-kind-and-a-players-own-limits)
 - Ownership and undo are two lists; passing the undo depth never disowns. Departed players' props are disowned even when kept. [spawning](docs/spawning.md#ownership-and-undo-are-two-different-lists)
 - Protection is the spawner's (`set_protected`), asked by every tool and every damage path. [spawning](docs/spawning.md#protected-owners)
 - `is_alive()`, never `is_instance_valid`; `removed` fires before the free. [spawning](docs/spawning.md#is_alive-is-not-the-node-is-valid)
-- `DotPropIO` knows nothing about doors; a removal drops every wire; depth stops at `max_depth`. [spawning](docs/spawning.md#props-wired-to-props)
+- `GSPropIO` knows nothing about doors; a removal drops every wire; depth stops at `max_depth`. [spawning](docs/spawning.md#props-wired-to-props)
 - Tools take an origin and a direction, never a camera; ownership is the host's `can_touch_others`; one holder at a time. [tools](docs/tools.md#what-every-tool-shares)
 - The physics gun pushes with a velocity, never teleports; `max_speed` is a safety cap; `hold_rotation` is view-relative; freezing zeroes velocities. [tools](docs/tools.md#the-physics-gun-holds-with-a-spring)
 - The static `set_frozen` emits no signal. [tools](docs/tools.md#its-signals)
 - The gravity gun punts with an impulse and refuses a frozen prop. [tools](docs/tools.md#the-gravity-gun-is-not-a-smaller-physics-gun)
-- `DotPropDamage` describes a blast (`exploded`) and shoves only props; GameSpice Combat hurts people. `max_health = 0` is indestructible. [damage-and-carry](docs/damage-and-carry.md#dotpropdamage-holds-the-health-and-applies-none-of-it)
+- `GSPropDamage` describes a blast (`exploded`) and shoves only props; GameSpice Combat hurts people. `max_health = 0` is indestructible. [damage-and-carry](docs/damage-and-carry.md#dotpropdamage-holds-the-health-and-applies-none-of-it)
 - Carry uses the angular velocity too, and `weight_scale` below 1. [damage-and-carry](docs/damage-and-carry.md#a-character-motor-does-not-touch-a-rigid-body)
 - A disguise's hull is computed on both ends from the replicated size, never sent. [hunt](docs/hunt.md#dotpropdisguise)
 - A leant disguise turns about its box's middle and rests on the floor: draw with `model_transform`, hit with `box_transform`, sweep `standing_hull`. [hunt](docs/hunt.md#dotpropdisguise)
@@ -70,34 +70,34 @@ Read the family [CLAUDE.md](../../CLAUDE.md) first; this file is only what is sp
 - A hit scan asks `shot` first (a toy's index or -1); the push is a speed from the damage given to a toy of up to 3 kg, never the damage as an impulse (a ball flew at 40 m/s). [toys](docs/toys.md#shots-and-blasts)
 - A roundabout carries its riders by `carry_for` after the move on every end (a rotation about the hub, never the rim speed along a tangent); a client measures the spin from the poses, as it is not sent. [toys](docs/toys.md#a-roundabout-carries-its-riders)
 - The selftest's toys are turned 20 degrees and a hundred metres up: aligned axes hid the hinge bug, and a crate left falling by an earlier section flung a tyre 300 m. [toys](docs/toys.md#testing)
-- `DotPropPieces.measure` is tool time only (V-HACD, seconds per model, maybe absent from an export template); the game ships `encode`d pieces and both ends build from them. One decomposition per material, or a leaf clump and the trunk become one hull. [pieces](docs/pieces.md)
+- `GSPropPieces.measure` is tool time only (V-HACD, seconds per model, maybe absent from an export template); the game ships `encode`d pieces and both ends build from them. One decomposition per material, or a leaf clump and the trunk become one hull. [pieces](docs/pieces.md)
 
 ## Where a game plugs in
 
 | To change | Where |
 | --- | --- |
-| What can be spawned | `DotPropCatalogue`, from JSON, or `DotPropFolder.load_into` for a folder of `.glb` files |
-| What a prop costs against a budget | `DotPropDef.cost` |
-| How many of a kind a player may have | `DotPropDef.limit_group`, `DotPropLimits.group_limits` |
-| Who gets bigger limits | `DotPropSpawner.limit_resolver` |
-| Who may spawn what | `DotPropDef.entitlement` / `permission`, plus the `entitlements` callable |
-| How much anybody may spawn | `DotPropLimits`, layered like any `DotConfig` |
-| Where props go in the tree | `DotPropSpawner.world_ref` |
+| What can be spawned | `GSPropCatalogue`, from JSON, or `GSPropFolder.load_into` for a folder of `.glb` files |
+| What a prop costs against a budget | `GSPropDef.cost` |
+| How many of a kind a player may have | `GSPropDef.limit_group`, `GSPropLimits.group_limits` |
+| Who gets bigger limits | `GSPropSpawner.limit_resolver` |
+| Who may spawn what | `GSPropDef.entitlement` / `permission`, plus the `entitlements` callable |
+| How much anybody may spawn | `GSPropLimits`, layered like any `GSConfig` |
+| Where props go in the tree | `GSPropSpawner.world_ref` |
 | Whether players may move each other's props | `can_touch_others` on every tool call; `set_protected` for one owner |
-| How a physics gun feels | `stiffness`, `damping`, `push_speed` on `DotPhysGun` |
-| A held or frozen prop's collision layer | `DotPhysGun.grabbed` / `released` / `freeze_changed` |
-| A new tool | `DotPropTool` subclass |
-| Telling the player why a spawn failed | `DotPropSpawner.refused` |
-| Doing something to everything in the world | `DotPropSpawner.all_props`, which hands out a copy |
-| A prop that has code behind it | `DotPropDef.meta`, read on `spawned`. See game-playlot's entities |
-| Buttons, levers, doors | `DotPropIO`, with `outputs` / `inputs` in the definition's meta |
-| What breaks, and what a blast does | `DotPropDef` damage fields; `DotPropDamage.exploded` connected to GameSpice Combat |
-| Riding a prop | `DotPropCarry`, fed the motor's `ground_id` |
-| A player disguised as a prop | `DotPropDisguiseRules`, `DotPropDisguise`, `DotPropTaunts` |
-| A prop in a 2D world | `DotPropSpawner.spawn_2d`. See game-hungario |
-| A map prop's collision shaped like its model | `DotPropPieces.measure` in the game's measuring tool, `decode` + `shapes` at run time. See game-hide-n-seek |
-| Toys on a map | `DotPropBodyBox` with the game's collision bits, `build(placements)`; per tick `push_from`/`stand_on`/`advance`, the use key's `aimed` + `use`, shots' `hit`, `launch_for` in movement; replicate `state_transform`/`on`/`count`. See game-hide-n-seek |
-| A new toy, or a stock one retuned | `DotPropBodyCatalogue.merge` / `merge_json` |
-| How many toys simulate, whether there are any | `DotPropBodyRules` (`sv_physprops`, `sv_physprops_awake`, `sv_physprops_push`; the old `sv_toys*` names are aliases), `bind_cvars` on the server, `follow_cvars` on a client |
+| How a physics gun feels | `stiffness`, `damping`, `push_speed` on `GSPhysGun` |
+| A held or frozen prop's collision layer | `GSPhysGun.grabbed` / `released` / `freeze_changed` |
+| A new tool | `GSPropTool` subclass |
+| Telling the player why a spawn failed | `GSPropSpawner.refused` |
+| Doing something to everything in the world | `GSPropSpawner.all_props`, which hands out a copy |
+| A prop that has code behind it | `GSPropDef.meta`, read on `spawned`. See game-playlot's entities |
+| Buttons, levers, doors | `GSPropIO`, with `outputs` / `inputs` in the definition's meta |
+| What breaks, and what a blast does | `GSPropDef` damage fields; `GSPropDamage.exploded` connected to GameSpice Combat |
+| Riding a prop | `GSPropCarry`, fed the motor's `ground_id` |
+| A player disguised as a prop | `GSPropDisguiseRules`, `GSPropDisguise`, `GSPropTaunts` |
+| A prop in a 2D world | `GSPropSpawner.spawn_2d`. See game-hungario |
+| A map prop's collision shaped like its model | `GSPropPieces.measure` in the game's measuring tool, `decode` + `shapes` at run time. See game-hide-n-seek |
+| Toys on a map | `GSPropBodyBox` with the game's collision bits, `build(placements)`; per tick `push_from`/`stand_on`/`advance`, the use key's `aimed` + `use`, shots' `hit`, `launch_for` in movement; replicate `state_transform`/`on`/`count`. See game-hide-n-seek |
+| A new toy, or a stock one retuned | `GSPropBodyCatalogue.merge` / `merge_json` |
+| How many toys simulate, whether there are any | `GSPropBodyRules` (`sv_physprops`, `sv_physprops_awake`, `sv_physprops_push`; the old `sv_toys*` names are aliases), `bind_cvars` on the server, `follow_cvars` on a client |
 
 Deliberately not here: replication (a toy's state is three fields a game's own behaviour sends), a spawn menu, constraints (welding, ropes, thrusters, wheels), saving a build, a damage model for people, content delivery. [spawning](docs/spawning.md#deliberately-not-here)

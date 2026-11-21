@@ -1,4 +1,4 @@
-class_name DotPropPanes
+class_name GSPropPanes
 extends RefCounted
 
 ## Breakable map boxes (glass, thin ice): indexing, damage, blast and impact arithmetic, and the

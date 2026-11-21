@@ -1,6 +1,6 @@
 # Pieces: collision shaped like the model
 
-`DotPropPieces` turns a placed prop's one box into a few convex hulls that follow the model: a tree becomes its trunk, its branches and its leaf clumps; a table its top and legs; a sofa its seat, back and arms.
+`GSPropPieces` turns a placed prop's one box into a few convex hulls that follow the model: a tree becomes its trunk, its branches and its leaf clumps; a table its top and legs; a sofa its seat, back and arms.
 
 ## Why not one box
 

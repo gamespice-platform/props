@@ -1,4 +1,4 @@
-class_name DotPropBodyRules
+class_name GSPropBodyRules
 extends Resource
 
 ## What a server allows of a map's toys: whether there are any, how many may be simulating at
@@ -44,7 +44,7 @@ var _bound: Dictionary = {}
 func cap() -> int:
 	if max_awake > 0:
 		return max_awake
-	return 24 if DotPlatform.has_threads() else 8
+	return 24 if GSPlatform.has_threads() else 8
 
 
 func cvar_specs() -> Array[Dictionary]:
@@ -97,7 +97,7 @@ func bind_cvars(add: Callable, flags: int = 0) -> Array:
 	return made
 
 
-## Keeps these rules on a server's values as [param source] (GameSpice Server's `DotClientLink`)
+## Keeps these rules on a server's values as [param source] (GameSpice Server's `GSClientLink`)
 ## reports them. False when it cannot (an older shell's link).
 func follow_cvars(source: Object) -> bool:
 	if source == null or not is_instance_valid(source):

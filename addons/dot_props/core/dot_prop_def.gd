@@ -1,5 +1,5 @@
 @tool
-class_name DotPropDef
+class_name GSPropDef
 extends Resource
 
 ## One thing a player can spawn.
@@ -12,8 +12,8 @@ extends Resource
 ## thirty players' budgets cannot load thirty scenes to do it, and a client showing a
 ## spawn menu of four hundred props must not load four hundred.
 ##
-## The same reasoning as [code]DotItem[/code] in GameSpice Loadout and
-## [code]DotAvatarSchema[/code] in GameSpice User Avatar: the document is checkable on its
+## The same reasoning as [code]GSItem[/code] in GameSpice Loadout and
+## [code]GSAvatarSchema[/code] in GameSpice User Avatar: the document is checkable on its
 ## own, and the content is fetched only when something is actually created.
 
 ## Rough size, which is what a spawn budget is really about.
@@ -41,7 +41,7 @@ enum Size {
 @export var category: StringName = &"props"
 
 ## Which per-player limit this counts against: `props`, `npcs`, `vehicles`, `balloons` —
-## any name a game's [member DotPropLimits.group_limits] uses. Empty is [constant GROUP_PROPS].
+## any name a game's [member GSPropLimits.group_limits] uses. Empty is [constant GROUP_PROPS].
 ##
 ## [b]A count, beside the cost budget, and not instead of it.[/b] The budget asks "how much
 ## of the server's simulation is yours"; a group limit asks "how many of THESE may you
@@ -62,7 +62,7 @@ enum Size {
 ## The scene instantiated on spawn.
 ##
 ## May live inside a GameSpice Cloud pack, in which case the pack must be mounted first —
-## which is the game's business, not this addon's. See [DotPropSpawner].
+## which is the game's business, not this addon's. See [GSPropSpawner].
 @export var scene_path: String = ""
 
 ## The GameSpice Cloud content id this prop lives in, or empty when it ships in the build.
@@ -94,7 +94,7 @@ enum Size {
 ## [RigidBody3D] a player stands on does nothing about it on its own: the character
 ## motor in this family sweeps a shape and slides, so it treats a crate exactly as it
 ## treats the floor — the crate does not sink, does not tip, and does not carry the
-## player anywhere when something shoves it. [DotPropCarry] is the half that makes it
+## player anywhere when something shoves it. [GSPropCarry] is the half that makes it
 ## behave like an object, and this is the flag that says a given prop wants it. Off
 ## for anything a player is meant to treat as ground.
 @export var rideable: bool = true
@@ -111,13 +111,13 @@ enum Size {
 
 ## Speed of impact, in m/s, above which a collision breaks this prop outright.
 ##
-## Zero means impacts never break it and only [method DotPropDamage.hurt] can. This is
+## Zero means impacts never break it and only [method GSPropDamage.hurt] can. This is
 ## separate from [member max_health] because the two answer different questions: a
 ## crate has to survive being walked into and not survive being hit by a bus, and the
 ## thing that separates those is closing speed rather than accumulated damage.
 @export_range(0.0, 1000.0, 0.5) var break_impact_speed: float = 0.0
 
-## What the prop is made of: glass, wood, metal, stone or plastic. Break effects (GameSpice FX's DotFxBreak) key on it.
+## What the prop is made of: glass, wood, metal, stone or plastic. Break effects (GameSpice FX's GSFxBreak) key on it.
 @export var material: StringName = &"wood"
 
 ## Radius in metres of the explosion this prop makes when it breaks. Zero for none.
@@ -125,8 +125,8 @@ enum Size {
 ## [b]This addon does not explode anything.[/b] It has no damage model and must not
 ## grow one — GameSpice Combat already owns that, and a second one would be a second set of
 ## rules about who a blast hurts. What these three fields are is a [i]description[/i]
-## of a blast, emitted on [signal DotPropDamage.exploded] for a game to hand to
-## [code]DotCombatManager.explode[/code]. The prop knows it is a barrel; only the game
+## of a blast, emitted on [signal GSPropDamage.exploded] for a game to hand to
+## [code]GSCombatManager.explode[/code]. The prop knows it is a barrel; only the game
 ## knows what a barrel does to a person.
 @export_range(0.0, 100.0, 0.5) var explode_radius: float = 0.0
 
@@ -136,7 +136,7 @@ enum Size {
 ## Impulse applied to other props inside the radius, in newton-seconds.
 @export var explode_force: float = 0.0
 
-## What one of these costs against a player's budget. See [DotPropLimits].
+## What one of these costs against a player's budget. See [GSPropLimits].
 ##
 ## Separate from [member size] so a server can make one specific prop expensive
 ## without reclassifying it — which is what actually happens when one model turns out
@@ -170,8 +170,8 @@ func group() -> StringName:
 	return limit_group if limit_group != &"" else GROUP_PROPS
 
 
-static func make(p_id: StringName, p_scene: String) -> DotPropDef:
-	var prop := DotPropDef.new()
+static func make(p_id: StringName, p_scene: String) -> GSPropDef:
+	var prop := GSPropDef.new()
 	prop.id = p_id
 	prop.scene_path = p_scene
 	prop.display_name = String(p_id).capitalize()
@@ -186,26 +186,26 @@ func is_local() -> bool:
 	return content_id == &""
 
 
-func validate() -> DotResult:
+func validate() -> GSResult:
 	if id == &"":
-		return DotResult.fail(DotError.CODE_INVALID, "A prop needs an id.")
+		return GSResult.fail(GSError.CODE_INVALID, "A prop needs an id.")
 
 	if scene_path == "":
-		return DotResult.fail(
-			DotError.CODE_INVALID, "A prop needs a scene path.", String(id)
+		return GSResult.fail(
+			GSError.CODE_INVALID, "A prop needs a scene path.", String(id)
 		)
 
 	# A blast with a radius and no damage and no force is a barrel that goes off and
 	# does nothing, which reads as the explosion being broken rather than as the
 	# numbers being unset. Refused here, where the message can name the prop.
 	if explode_radius > 0.0 and explode_damage <= 0.0 and explode_force <= 0.0:
-		return DotResult.fail(
-			DotError.CODE_INVALID,
+		return GSResult.fail(
+			GSError.CODE_INVALID,
 			"A prop with an explode_radius needs explode_damage or explode_force.",
 			String(id),
 		)
 
-	return DotResult.success(null)
+	return GSResult.success(null)
 
 
 func to_dictionary() -> Dictionary:
@@ -256,8 +256,8 @@ func to_dictionary() -> Dictionary:
 	return out
 
 
-static func from_dictionary(data: Dictionary) -> DotPropDef:
-	var prop := DotPropDef.new()
+static func from_dictionary(data: Dictionary) -> GSPropDef:
+	var prop := GSPropDef.new()
 
 	prop.id = StringName(str(data.get("id", "")))
 	prop.scene_path = str(data.get("scene", ""))
@@ -310,4 +310,4 @@ func describe() -> Dictionary:
 
 
 func _to_string() -> String:
-	return "DotPropDef(%s)" % String(id)
+	return "GSPropDef(%s)" % String(id)

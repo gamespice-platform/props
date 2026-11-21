@@ -1,4 +1,4 @@
-class_name DotToolView
+class_name GSToolView
 extends Node3D
 
 ## The first-person model of a held tool or toy (physics gun, launcher, remover), drawn under the camera.
@@ -6,12 +6,12 @@ extends Node3D
 
 const CHANNEL := "props.toolview"
 ## The lens and depth the model is authored at; the same numbers a held weapon model uses.
-const REFERENCE_FOV := DotViewLens.REFERENCE_FOV
-const REFERENCE_DEPTH := DotViewLens.REFERENCE_DEPTH
-const MAX_PULL_IN := DotViewLens.MAX_PULL_IN
+const REFERENCE_FOV := GSViewLens.REFERENCE_FOV
+const REFERENCE_DEPTH := GSViewLens.REFERENCE_DEPTH
+const MAX_PULL_IN := GSViewLens.MAX_PULL_IN
 
 ## The camera this draws under, resolved against this node. Left empty it is the parent.
-@export var camera_ref: DotNodeRef = null
+@export var camera_ref: GSNodeRef = null
 
 ## Vertical field of view the model is drawn at; 0 draws it under the camera's own lens.
 @export var hands_fov: float = 0.0
@@ -24,25 +24,25 @@ var _camera: Camera3D = null
 
 
 ## Builds a model tinted [param colour] and puts it under [param camera] when one is given.
-static func make(colour: Color, is_domed: bool = false, camera: Node = null) -> DotToolView:
-	var view := DotToolView.new()
+static func make(colour: Color, is_domed: bool = false, camera: Node = null) -> GSToolView:
+	var view := GSToolView.new()
 	view.name = "ToolViewModel"
 	view.domed = is_domed
 	view._build(colour)
 	if camera != null:
 		camera.add_child(view)
-	DotLog.debug(CHANNEL, "built", {"domed": is_domed, "colour": colour.to_html(false)})
+	GSLog.debug(CHANNEL, "built", {"domed": is_domed, "colour": colour.to_html(false)})
 	return view
 
 
 ## The vertical field of view that is [param horizontal] degrees across a 4:3 frame.
 static func vertical_from_horizontal_4_3(horizontal: float) -> float:
-	return DotViewLens.vertical_from_horizontal_4_3(horizontal)
+	return GSViewLens.vertical_from_horizontal_4_3(horizontal)
 
 
 ## How much X and Y are scaled to draw at [param hands] degrees under a [param camera]-degree lens.
 static func lens_scale(camera: float, hands: float) -> float:
-	return DotViewLens.lens_scale(camera, hands)
+	return GSViewLens.lens_scale(camera, hands)
 
 
 ## The same horizontal-at-4:3 convention as a held weapon model, so the two agree.
@@ -65,7 +65,7 @@ func _init() -> void:
 
 func _process(delta: float) -> void:
 	_kick = maxf(0.0, _kick - delta * 6.0)
-	DotViewLens.apply(self, _find_camera(), hands_fov, 1.0, _kick * 0.05)
+	GSViewLens.apply(self, _find_camera(), hands_fov, 1.0, _kick * 0.05)
 
 
 func _find_camera() -> Camera3D:

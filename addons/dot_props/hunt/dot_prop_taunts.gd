@@ -1,4 +1,4 @@
-class_name DotPropTaunts
+class_name GSPropTaunts
 extends RefCounted
 
 ## Taunts: the noises a hidden player makes, by choice or because they stood still too long.
@@ -124,15 +124,15 @@ func due(key: StringName, now: float) -> bool:
 
 
 ## Whether [param key] may taunt now, and why not.
-func may_taunt(key: StringName, now: float) -> DotResult:
+func may_taunt(key: StringName, now: float) -> GSResult:
 	if catalogue.is_empty():
-		return DotResult.fail(DotError.CODE_STATE, "This server has no taunts.")
+		return GSResult.fail(GSError.CODE_STATE, "This server has no taunts.")
 
 	if not _quiet(key, now):
-		return DotResult.fail(DotError.CODE_RATE_LIMITED,
+		return GSResult.fail(GSError.CODE_RATE_LIMITED,
 			"Wait %.1f s to taunt again." % ready_in(key, now))
 
-	return DotResult.success(null)
+	return GSResult.success(null)
 
 
 ## Seconds until [param key] may taunt again; 0 is now.

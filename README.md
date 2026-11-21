@@ -14,11 +14,11 @@ GameSpice Core is the only dependency.
 ## Spawning props
 
 ```gdscript
-var spawner := DotPropSpawner.new()
+var spawner := GSPropSpawner.new()
 spawner.authoritative = true                  # server only; otherwise every spawn is refused
-spawner.catalogue = DotPropCatalogue.load_json("res://props.json").value
-spawner.limits = DotPropLimits.new()
-spawner.world_ref = DotNodeRef.of_path(^"../World")   # where props are added
+spawner.catalogue = GSPropCatalogue.load_json("res://props.json").value
+spawner.limits = GSPropLimits.new()
+spawner.world_ref = GSNodeRef.of_path(^"../World")   # where props are added
 add_child(spawner)
 
 spawner.refused.connect(func(player, prop, reason): tell(player, reason))
@@ -29,7 +29,7 @@ spawner.undo(player_id)
 spawner.player_left(player_id)                         # removes their props
 ```
 
-To show a player's subscribed Workshop props in solo, call `spawner.catalogue.follow_content(DotContentIndex.shared())` and rebuild the menu on `content_changed`. See [docs/spawning.md](docs/spawning.md#workshop-props-follow_content).
+To show a player's subscribed Workshop props in solo, call `spawner.catalogue.follow_content(GSContentIndex.shared())` and rebuild the menu on `content_changed`. See [docs/spawning.md](docs/spawning.md#workshop-props-follow_content).
 
 `props.json`:
 
@@ -59,10 +59,10 @@ A prop's scene is a `RigidBody3D` with no script. Optional fields:
 
 ## Settings
 
-Limits live in a `DotPropLimits` resource, layered like every GameSpice config: inspector defaults, then a JSON file, then environment, then command line.
+Limits live in a `GSPropLimits` resource, layered like every GameSpice config: inspector defaults, then a JSON file, then environment, then command line.
 
 ```gdscript
-var limits := DotPropLimits.new()
+var limits := GSPropLimits.new()
 limits.load_layered("user://props.json")
 spawner.limits = limits
 ```
@@ -88,7 +88,7 @@ All numbers are defaults you can change.
 ## Tools
 
 ```gdscript
-var gun := DotPhysGun.new()
+var gun := GSPhysGun.new()
 gun.spawner = spawner
 gun.wielder = player_id
 
@@ -99,7 +99,7 @@ gun.rotate_held(yaw_degrees, pitch_degrees)
 gun.release()
 gun.freeze_held()
 
-var grav := DotGravGun.new()
+var grav := GSGravGun.new()
 grav.spawner = spawner
 grav.wielder = player_id
 
@@ -114,8 +114,8 @@ Anybody can move anybody's props by default. `set_protected(player_id, true)` st
 ## Breakable props
 
 ```gdscript
-var damage := DotPropDamage.new()
-damage.spawner_ref = DotNodeRef.of_path(^"../Props")
+var damage := GSPropDamage.new()
+damage.spawner_ref = GSNodeRef.of_path(^"../Props")
 damage.authoritative = true                   # server only; otherwise hurt() refuses
 add_child(damage)
 
@@ -128,19 +128,19 @@ When a prop with an explosion breaks, nearby props are pushed and `exploded` fir
 
 ## Standing on props
 
-`DotPropCarry` lets players stand on props. Call `ride()` once per tick for each grounded player: it applies their weight to the prop and returns how far the prop moved them. `push()` shoves a prop a player walks into. See [docs/damage-and-carry.md](docs/damage-and-carry.md).
+`GSPropCarry` lets players stand on props. Call `ride()` once per tick for each grounded player: it applies their weight to the prop and returns how far the prop moved them. `push()` shoves a prop a player walks into. See [docs/damage-and-carry.md](docs/damage-and-carry.md).
 
 ## Collision shaped like the model
 
-A prop in a map collides as a box unless given pieces. `DotPropPieces.measure(model, frame)` cuts a model into convex hulls. It is slow, so run it in a tool and ship the result. Details: [docs/pieces.md](docs/pieces.md).
+A prop in a map collides as a box unless given pieces. `GSPropPieces.measure(model, frame)` cuts a model into convex hulls. It is slow, so run it in a tool and ship the result. Details: [docs/pieces.md](docs/pieces.md).
 
 ```gdscript
 # In your measuring tool (editor build):
-var pieces := DotPropPieces.measure(model_scene.instantiate(), Transform3D(Basis.from_scale(Vector3.ONE * scale), offset))
-file[prop_id] = DotPropPieces.encode(pieces)   # empty when the box is as good
+var pieces := GSPropPieces.measure(model_scene.instantiate(), Transform3D(Basis.from_scale(Vector3.ONE * scale), offset))
+file[prop_id] = GSPropPieces.encode(pieces)   # empty when the box is as good
 
 # At run time, on the server and every client:
-for shape in DotPropPieces.shapes(DotPropPieces.decode(file[prop_id])):
+for shape in GSPropPieces.shapes(GSPropPieces.decode(file[prop_id])):
     var node := CollisionShape3D.new()
     node.shape = shape
     body.add_child(node)
@@ -151,8 +151,8 @@ for shape in DotPropPieces.shapes(DotPropPieces.decode(file[prop_id])):
 A prop lists what it can send and receive in `meta`, for example `{"outputs": ["pressed"]}` on a button and `{"inputs": ["open", "close"]}` on a door.
 
 ```gdscript
-var io := DotPropIO.new()
-io.spawner_ref = DotNodeRef.of_path(^"../Props")
+var io := GSPropIO.new()
+io.spawner_ref = GSNodeRef.of_path(^"../Props")
 add_child(io)
 
 io.link(button.instance_id, &"pressed", door.instance_id, &"open")
@@ -164,15 +164,15 @@ What "open" means is up to your game.
 
 ## Hiding as a prop
 
-For hide-and-seek games, `DotPropDisguise` holds what a player is disguised as and works out the collision capsule, health and hitbox from the prop's size, identically on the server and clients. `DotPropTaunts` keeps the taunt list, cooldown, points, and a meter that forces a taunt on someone who stood still too long. See [docs/hunt.md](docs/hunt.md).
+For hide-and-seek games, `GSPropDisguise` holds what a player is disguised as and works out the collision capsule, health and hitbox from the prop's size, identically on the server and clients. `GSPropTaunts` keeps the taunt list, cooldown, points, and a meter that forces a taunt on someone who stood still too long. See [docs/hunt.md](docs/hunt.md).
 
 ```gdscript
-var rules := DotPropDisguiseRules.new()        # fill from your config
-var ok := DotPropDisguise.may_take(size, rules)
-var hull := DotPropDisguise.hull(size, rules)  # Vector2(radius, height)
-var hp := DotPropDisguise.health(size, rules)
+var rules := GSPropDisguiseRules.new()        # fill from your config
+var ok := GSPropDisguise.may_take(size, rules)
+var hull := GSPropDisguise.hull(size, rules)  # Vector2(radius, height)
+var hp := GSPropDisguise.health(size, rules)
 
-var taunts := DotPropTaunts.new()
+var taunts := GSPropTaunts.new()
 taunts.add_all(config_taunts)                  # [{"id", "title", "seconds", "sound"}]
 taunts.observe(player_key, position, now)      # every tick
 if taunts.due(player_key, now):
@@ -184,7 +184,7 @@ if taunts.due(player_key, now):
 Map objects players play with, placed from the map's data: beach ball, football, bowling ball and pins, barrel, tyre, punching bag, swing, see-saw, roundabout, wobbly platform, trampoline, bounce pad, switch, lamp post, fountain, horn and bell. The server simulates them and clients draw what it sends.
 
 ```gdscript
-var toys := DotPropBodyBox.new()
+var toys := GSPropBodyBox.new()
 toys.authoritative = is_server
 toys.draw = not is_dedicated_server
 toys.loose_layer = layout.layer_mask(&"toy")      # balls, barrels: pushed by walking into them
@@ -211,7 +211,7 @@ toys.shot_along(origin, direction, reach, damage, level_mask)
 toys.blast(at, radius, speed)
 ```
 
-Replicate each toy by its index with `state_transform()`, `on` and `count`, and call `show_state` on clients. Connect `sound` to your audio and add `DotPropBodySounds.rows()` to your sound catalogue. Add or retune toys with `DotPropBodyCatalogue.merge_json`. See [docs/toys.md](docs/toys.md).
+Replicate each toy by its index with `state_transform()`, `on` and `count`, and call `show_state` on clients. Connect `sound` to your audio and add `GSPropBodySounds.rows()` to your sound catalogue. Add or retune toys with `GSPropBodyCatalogue.merge_json`. See [docs/toys.md](docs/toys.md).
 
 | Server setting | Meaning |
 | --- | --- |

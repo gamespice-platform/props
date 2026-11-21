@@ -1,4 +1,4 @@
-class_name DotPropToyRules
-extends DotPropBodyRules
+class_name GSPropToyRules
+extends GSPropBodyRules
 
-## Deprecated alias of [DotPropBodyRules] (renamed). New code uses [DotPropBodyRules].
+## Deprecated alias of [GSPropBodyRules] (renamed). New code uses [GSPropBodyRules].

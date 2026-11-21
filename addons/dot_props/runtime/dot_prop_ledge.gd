@@ -1,4 +1,4 @@
-class_name DotPropLedge
+class_name GSPropLedge
 extends StaticBody3D
 
 ## A rock outcrop pinching a road to a narrow ledge, tapered so a wheel is guided in rather
@@ -20,8 +20,8 @@ static func clear_width(road_width: float, intrusion_m: float) -> float:
 
 ## An outcrop taking [param intrusion_m] off the [param side] edge of a road [param road_width]
 ## across, [param length_m] long, [param height_m] high. Seeded so every machine builds the same one.
-static func make(road_width: float, intrusion_m: float, length_m: float, height_m: float, side_sign: float, seed_value: int, material: Material, layers: int = 1) -> DotPropLedge:
-	var ledge := DotPropLedge.new()
+static func make(road_width: float, intrusion_m: float, length_m: float, height_m: float, side_sign: float, seed_value: int, material: Material, layers: int = 1) -> GSPropLedge:
+	var ledge := GSPropLedge.new()
 	ledge.name = "Ledge"
 	ledge.intrusion = intrusion_m
 	ledge.length = length_m

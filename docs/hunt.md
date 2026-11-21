@@ -2,7 +2,7 @@
 
 The hide-and-seek games turn a player into a prop, and the arithmetic of that is the same in every one of them and has to be the same on both ends of a wire. mg-prop-hunt is the first user.
 
-## `DotPropDisguise`
+## `GSPropDisguise`
 
 A value (an id, a size in metres, yaw, pitch, roll, locked) with the statics a game needs:
 
@@ -13,9 +13,9 @@ A value (an id, a size in metres, yaw, pitch, roll, locked) with the statics a g
 
 - `standing_size`, `standing_hull`, `middle_height`, `model_transform`, `box_transform` (API level 4): the prop **leant**. A lean (pitch, roll) turns the box about its middle, and the middle stands at half the leant height, so the lowest corner rests on the floor at any turn; the hull is the leant box's (a bottle on its side is low and long). The first consumer turned its model about the foot of the box, and mg-prop-hunt's first play test asked to lay a water bottle on its side or its nose "WITHOUT going into the ground (since that'd be cheating)": half of it was under the floor, out of every shot. The suite turns a bottle every eighth of a turn both ways and holds its lowest corner to the floor.
 
-The hitbox is the other half and IS the prop's box turned by `hit_basis` (placed by `box_transform`), because what a seeker shoots at is what they can see. **Both ends compute the hull from the replicated size and never send it.** `DotPropDisguiseRules` is the resource a game fills from its own config.
+The hitbox is the other half and IS the prop's box turned by `hit_basis` (placed by `box_transform`), because what a seeker shoots at is what they can see. **Both ends compute the hull from the replicated size and never send it.** `GSPropDisguiseRules` is the resource a game fills from its own config.
 
-## `DotPropTaunts`
+## `GSPropTaunts`
 
 The noise a hidden player makes: a catalogue (`add_all` from JSON), a cooldown on top of the last taunt's length, points for a chosen one (and, if the server says so, a forced one), and the standing-still meter that forces one on somebody who has not left `auto_radius` of where they settled for `auto_after` seconds. A radius rather than a speed, because a player shuffling on one spot is standing still as far as being found goes.
 

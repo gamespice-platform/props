@@ -1,10 +1,10 @@
-class_name DotPropCarry
+class_name GSPropCarry
 extends Node
 
 ## Standing on a prop, and what that does to the prop. The half a crate needs to climb.
 ##
 ## [b]A character motor does not interact with a rigid body, and nothing about that
-## looks broken.[/b] [DotFpsMotor] and every motor like it sweep a shape and slide
+## looks broken.[/b] [GSFpsMotor] and every motor like it sweep a shape and slide
 ## along whatever they hit, which means a crate is exactly as solid as the floor and
 ## exactly as immovable: a player stands on one and it does not sink, does not tip,
 ## and does not carry them anywhere when a bus shoves it out from under them. Every
@@ -12,12 +12,12 @@ extends Node
 ## [RigidBody3D], and the only way to notice is to stand on one and expect something.
 ##
 ## This is the missing half, and it is deliberately [i]outside[/i] the motor. The motor
-## already publishes what is needed — [code]DotFpsState.ground_id[/code], the instance
+## already publishes what is needed — [code]GSFpsState.ground_id[/code], the instance
 ## id of the collider underfoot — and it is documented there as a local physics handle
 ## that is not part of the simulation. So riding is resolved per frame on each machine
 ## from a handle each machine has, rather than becoming another field in a predicted
 ## state that a client and a server would have to agree about. Rigid-body simulation
-## is not reproducible across machines, which is why [DotPropSpawner] does not predict
+## is not reproducible across machines, which is why [GSPropSpawner] does not predict
 ## props either; a predicted ride would be a correction every tick.
 ##
 ## [b]It only ever touches props.[/b] Everything here goes through the spawner, so a
@@ -25,8 +25,8 @@ extends Node
 ## on it. A prop the spawner does not know about is not a prop.
 ##
 ## [codeblock]
-## var carry := DotPropCarry.new()
-## carry.spawner_ref = DotNodeRef.of_path(^"../Props")
+## var carry := GSPropCarry.new()
+## carry.spawner_ref = GSNodeRef.of_path(^"../Props")
 ## add_child(carry)
 ##
 ## # once per tick, per player, after the motor has run:
@@ -39,7 +39,7 @@ const CHANNEL := "props"
 @export_group("Wiring")
 
 ## The spawner that owns the props this may touch.
-@export var spawner_ref: DotNodeRef = null
+@export var spawner_ref: GSNodeRef = null
 
 @export_group("Tuning")
 
@@ -62,28 +62,28 @@ const CHANNEL := "props"
 @export_range(0.0, 1000.0, 1.0) var max_carry_speed: float = 60.0
 
 ## A map's toys, for the roundabout: a person standing on a turning one is carried round with
-## it by [method ride] ([method DotPropBodyBox.carry_for]). Null rides props only.
-var toys: DotPropBodyBox = null
+## it by [method ride] ([method GSPropBodyBox.carry_for]). Null rides props only.
+var toys: GSPropBodyBox = null
 
-var _spawner: DotPropSpawner = null
+var _spawner: GSPropSpawner = null
 
 
 func _ready() -> void:
 	_spawner = _resolve_spawner()
 	if _spawner == null:
-		DotLog.error(CHANNEL, "prop carry has no spawner; nothing will be rideable")
+		GSLog.error(CHANNEL, "prop carry has no spawner; nothing will be rideable")
 
 
-func _resolve_spawner() -> DotPropSpawner:
+func _resolve_spawner() -> GSPropSpawner:
 	if spawner_ref == null:
-		return get_parent() as DotPropSpawner
-	return spawner_ref.resolve_or_null(self, CHANNEL) as DotPropSpawner
+		return get_parent() as GSPropSpawner
+	return spawner_ref.resolve_or_null(self, CHANNEL) as GSPropSpawner
 
 
 ## The rideable prop under a player, or null when the ground is not one.
 ##
-## [param ground_id] is [code]DotFpsState.ground_id[/code] — 0 when airborne.
-func prop_under(ground_id: int) -> DotPropInstance:
+## [param ground_id] is [code]GSFpsState.ground_id[/code] — 0 when airborne.
+func prop_under(ground_id: int) -> GSPropInstance:
 	if ground_id == 0 or _spawner == null:
 		return null
 
@@ -190,7 +190,7 @@ func describe() -> Dictionary:
 
 func describe_lines() -> PackedStringArray:
 	var lines := PackedStringArray()
-	lines.append("DotPropCarry: weight x%.2f, carry capped at %.0f m/s"
+	lines.append("GSPropCarry: weight x%.2f, carry capped at %.0f m/s"
 		% [weight_scale, max_carry_speed])
 	if _spawner == null:
 		lines.append("  no spawner")
@@ -198,4 +198,4 @@ func describe_lines() -> PackedStringArray:
 
 
 func _to_string() -> String:
-	return "DotPropCarry(x%.2f)" % weight_scale
+	return "GSPropCarry(x%.2f)" % weight_scale

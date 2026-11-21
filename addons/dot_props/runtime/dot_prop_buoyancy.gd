@@ -1,4 +1,4 @@
-class_name DotPropBuoyancy
+class_name GSPropBuoyancy
 extends RefCounted
 
 ## Buoyancy and drag on a loose rigid body in a liquid. The host passes the liquid volumes

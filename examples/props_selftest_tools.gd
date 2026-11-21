@@ -9,7 +9,7 @@ func _test_tool_permissions() -> void:
 	var spawner := _spawner()
 	spawner.limits.spawn_interval = 0.0
 
-	var tool := DotPropTool.new()
+	var tool := GSPropTool.new()
 	tool.spawner = spawner
 	tool.wielder = &"alice"
 
@@ -51,10 +51,10 @@ func _test_protected_owners() -> void:
 	spawner.limits.spawn_interval = 0.0
 	var damage := _damage_node(spawner)
 
-	var tool := DotPropTool.new()
+	var tool := GSPropTool.new()
 	tool.spawner = spawner
 	tool.wielder = &"alice"
-	var bob_tool := DotPropTool.new()
+	var bob_tool := GSPropTool.new()
 	bob_tool.spawner = spawner
 	bob_tool.wielder = &"bob"
 
@@ -62,7 +62,7 @@ func _test_protected_owners() -> void:
 	spawner.set_protected(&"bob", true)
 	_check(spawner.is_protected(&"bob") and not spawner.is_protected(&"alice"), "protection is per owner")
 	var refused := tool.may_act_on(bobs)
-	_check(not refused.ok and refused.error.code == DotError.CODE_FORBIDDEN, "nobody else's tool may act on their props")
+	_check(not refused.ok and refused.error.code == GSError.CODE_FORBIDDEN, "nobody else's tool may act on their props")
 	_check(not tool.may_act_on(bobs, true).ok, "whatever the server's touch rule says")
 	_check(bob_tool.may_act_on(bobs).ok, "but their own does")
 	_check(not damage.hurt(bobs.instance_id, 40.0, &"alice").ok and is_equal_approx(damage.health_of(bobs.instance_id), 100.0),
@@ -88,21 +88,21 @@ func _test_wiring() -> void:
 	var spawner := _spawner()
 	spawner.limits.spawn_interval = 0.0
 	var catalogue := spawner.catalogue
-	var button_def := DotPropDef.make(&"button", "res://fixtures/prop_body.tscn")
+	var button_def := GSPropDef.make(&"button", "res://fixtures/prop_body.tscn")
 	button_def.meta = {"outputs": ["pressed"]}
 	catalogue.add(button_def)
-	var door_def := DotPropDef.make(&"door", "res://fixtures/prop_body.tscn")
+	var door_def := GSPropDef.make(&"door", "res://fixtures/prop_body.tscn")
 	door_def.meta = {"inputs": ["open", "close", "toggle"], "outputs": ["opened"]}
 	catalogue.add(door_def)
 
-	var io := DotPropIO.new()
+	var io := GSPropIO.new()
 	spawner.add_child(io)
 
 	var button := spawner.spawn(&"button", &"alice", Vector3(0.0, 1.0, 0.0))
 	var door := spawner.spawn(&"door", &"alice", Vector3(3.0, 1.0, 0.0))
 	var crate := spawner.spawn(&"crate", &"alice", Vector3(6.0, 1.0, 0.0))
 
-	_check(DotPropIO.outputs_of(button.def) == PackedStringArray(["pressed"]) and DotPropIO.inputs_of(door.def).has("toggle"),
+	_check(GSPropIO.outputs_of(button.def) == PackedStringArray(["pressed"]) and GSPropIO.inputs_of(door.def).has("toggle"),
 		"a prop declares what it says and hears in its meta")
 	_check(io.link(button.instance_id, &"pressed", door.instance_id, &"toggle").ok, "a button is wired to a door")
 	_check(not io.link(button.instance_id, &"pressed", door.instance_id, &"toggle").ok, "but not twice the same way")
@@ -111,7 +111,7 @@ func _test_wiring() -> void:
 	_check(not io.link(door.instance_id, &"opened", door.instance_id, &"open").ok, "nor to itself")
 
 	var heard: Array = []
-	io.input_received.connect(func(target: DotPropInstance, input: StringName, value: Variant, source: DotPropInstance) -> void:
+	io.input_received.connect(func(target: GSPropInstance, input: StringName, value: Variant, source: GSPropInstance) -> void:
 		heard.append([target.instance_id, input, value, source.instance_id if source != null else 0]))
 	_check(io.fire(button.instance_id, &"pressed", true) == 1 and heard.size() == 1
 		and heard[0] == [door.instance_id, &"toggle", true, button.instance_id], "firing the output reaches the door's input", str(heard))
@@ -120,7 +120,7 @@ func _test_wiring() -> void:
 	var other := spawner.spawn(&"door", &"alice", Vector3(9.0, 1.0, 0.0))
 	var _a := io.link(door.instance_id, &"opened", other.instance_id, &"toggle")
 	var _b := io.link(other.instance_id, &"opened", door.instance_id, &"toggle")
-	var bounce := func(target: DotPropInstance, input: StringName, _v: Variant, _s: DotPropInstance) -> void:
+	var bounce := func(target: GSPropInstance, input: StringName, _v: Variant, _s: GSPropInstance) -> void:
 		if input == &"toggle" and target.def.id == &"door":
 			var _n := io.fire(target.instance_id, &"opened")
 	io.input_received.connect(bounce)
@@ -138,7 +138,7 @@ func _test_wiring() -> void:
 	_check(io.link(button.instance_id, &"pressed", other.instance_id, &"open").ok
 		and not io.link(button.instance_id, &"pressed", lamp.instance_id, &"open").ok, "and a prop has at most max_links_per_prop wires")
 
-	var mirror := DotPropIO.new()
+	var mirror := GSPropIO.new()
 	mirror.authoritative = false
 	spawner.add_child(mirror)
 	_check(not mirror.link(button.instance_id, &"pressed", lamp.instance_id, &"open").ok and mirror.fire(button.instance_id, &"pressed") == 0,
@@ -160,7 +160,7 @@ func _test_freezing() -> void:
 
 	body.linear_velocity = Vector3(0.0, -30.0, 0.0)
 
-	DotPhysGun.set_frozen(crate, true)
+	GSPhysGun.set_frozen(crate, true)
 
 	_check(crate.frozen, "a prop can be frozen")
 	_check(body.freeze, "and the body knows it")
@@ -174,7 +174,7 @@ func _test_freezing() -> void:
 		"%.2f m/s" % body.linear_velocity.length()
 	)
 
-	DotPhysGun.set_frozen(crate, false)
+	GSPhysGun.set_frozen(crate, false)
 	_check(not crate.frozen, "and can be unfrozen")
 
 	spawner.queue_free()
@@ -187,17 +187,17 @@ func _test_freeze_limit() -> void:
 	# A frozen prop costs nothing to simulate, so it has its own ceiling rather than
 	# sharing the physics budget — and that ceiling has to actually be enforced,
 	# which for a while it was not: the knob existed and nothing read it.
-	var limits := DotPropLimits.new()
+	var limits := GSPropLimits.new()
 	limits.spawn_interval = 0.0
 	limits.per_player_frozen = 2
 
 	var spawner := _spawner(limits)
 
-	var gun := DotPhysGun.new()
+	var gun := GSPhysGun.new()
 	gun.spawner = spawner
 	gun.wielder = &"alice"
 
-	var props: Array[DotPropInstance] = []
+	var props: Array[GSPropInstance] = []
 
 	for _i in range(4):
 		props.append(spawner.spawn(&"crate", &"alice", Vector3.ZERO))
@@ -215,20 +215,20 @@ func _test_freeze_limit() -> void:
 	var refused := gun.freeze_held()
 	_check(not refused.ok, "and the third is refused")
 	_check(
-		refused.ok or refused.code() == DotError.CODE_QUOTA,
+		refused.ok or refused.code() == GSError.CODE_QUOTA,
 		"as a quota rather than as an internal error"
 	)
 	_check(gun.held == props[2], "and the prop is still in hand, not dropped")
 
 	# Unfreezing frees a slot, and unfreezing is never refused — a limit that fought
 	# its own operator tidying up would be a limit nobody keeps on.
-	DotPhysGun.set_frozen(props[0], false)
+	GSPhysGun.set_frozen(props[0], false)
 	_check(spawner.frozen_count(&"alice") == 1, "unfreezing frees a slot")
 	_check(gun.freeze_held().ok, "and the next freeze is allowed")
 
 	# Another player has their own allowance.
 	var bob := spawner.spawn(&"crate", &"bob", Vector3.ZERO)
-	var bob_gun := DotPhysGun.new()
+	var bob_gun := GSPhysGun.new()
 	bob_gun.spawner = spawner
 	bob_gun.wielder = &"bob"
 	bob_gun.held = bob
@@ -245,15 +245,15 @@ func _test_size_ceiling() -> void:
 
 	# A size class is a ceiling, not a budget: allow a hundred crates and forbid the one model
 	# the size of the map.
-	var limits := DotPropLimits.new()
+	var limits := GSPropLimits.new()
 	limits.spawn_interval = 0.0
-	limits.max_size = DotPropDef.Size.SMALL
+	limits.max_size = GSPropDef.Size.SMALL
 
 	var catalogue := _catalogue()
-	catalogue.get_prop(&"crate").size = DotPropDef.Size.SMALL
-	catalogue.get_prop(&"safe").size = DotPropDef.Size.HUGE
+	catalogue.get_prop(&"crate").size = GSPropDef.Size.SMALL
+	catalogue.get_prop(&"safe").size = GSPropDef.Size.HUGE
 
-	var spawner := DotPropSpawner.new()
+	var spawner := GSPropSpawner.new()
 	spawner.catalogue = catalogue
 	spawner.limits = limits
 	spawner.authoritative = true
@@ -279,7 +279,7 @@ func _test_size_ceiling() -> void:
 		str(refusals)
 	)
 
-	limits.max_size = DotPropDef.Size.HUGE
+	limits.max_size = GSPropDef.Size.HUGE
 	_check(
 		spawner.spawn(&"safe", &"alice", Vector3.ZERO) != null,
 		"and raising the ceiling allows it"
@@ -297,7 +297,7 @@ func _test_physgun_holds() -> void:
 
 	var crate := spawner.spawn(&"crate", &"alice", Vector3(0.0, 2.0, -6.0))
 
-	var gun := DotPhysGun.new()
+	var gun := GSPhysGun.new()
 	gun.spawner = spawner
 	gun.wielder = &"alice"
 
@@ -367,7 +367,7 @@ func _test_physgun_caps_speed() -> void:
 
 	var crate := spawner.spawn(&"crate", &"alice", Vector3(0.0, 2.0, 0.0))
 
-	var gun := DotPhysGun.new()
+	var gun := GSPhysGun.new()
 	gun.spawner = spawner
 	gun.wielder = &"alice"
 	gun.held = crate
@@ -403,7 +403,7 @@ func _test_gravgun_punts() -> void:
 
 	var crate := spawner.spawn(&"crate", &"alice", Vector3(0.0, 2.0, -3.0))
 
-	var gun := DotGravGun.new()
+	var gun := GSGravGun.new()
 	gun.spawner = spawner
 	gun.wielder = &"alice"
 
@@ -450,7 +450,7 @@ func _test_gravgun_punts() -> void:
 	# Mass is set BEFORE a step runs: an impulse applied in between is divided by the old mass.
 	await get_tree().physics_frame
 
-	var heavy_gun := DotGravGun.new()
+	var heavy_gun := GSGravGun.new()
 	heavy_gun.spawner = spawner
 	heavy_gun.wielder = &"alice"
 	heavy_gun.carried = heavy
@@ -474,11 +474,11 @@ func _test_gravgun_punts() -> void:
 
 
 ## A frozen prop is refused rather than quietly thawed, or a build comes apart piece by piece.
-func _check_gravgun_refuses_frozen(spawner: DotPropSpawner) -> void:
+func _check_gravgun_refuses_frozen(spawner: GSPropSpawner) -> void:
 	var frozen := spawner.spawn(&"crate", &"alice", Vector3(0.0, 2.0, -3.0))
-	DotPhysGun.set_frozen(frozen, true)
+	GSPhysGun.set_frozen(frozen, true)
 
-	var refusing := DotGravGun.new()
+	var refusing := GSGravGun.new()
 	refusing.spawner = spawner
 	refusing.wielder = &"alice"
 
@@ -492,7 +492,7 @@ func _test_tool_view() -> void:
 	var cam := Camera3D.new()
 	cam.fov = 75.0
 	_world.add_child(cam)
-	var view := DotToolView.make(Color(0.9, 0.5, 0.2), false, cam)
+	var view := GSToolView.make(Color(0.9, 0.5, 0.2), false, cam)
 	_check(view.get_parent() == cam and view.is_in_group(&"dot_view_model"), "it sits under the camera and joins dot_view_model")
 	view._process(0.016)
 	_check(view.scale == Vector3.ONE and view.position == Vector3.ZERO, "with no hands_fov it is drawn under the camera's own lens")
@@ -505,11 +505,11 @@ func _test_tool_view() -> void:
 	_check(view.position.z > 0.04, "a kick pushes it back")
 	view._process(1.0)
 	_check(is_zero_approx(view.position.z), "and the kick dies away")
-	_check(DotToolView.lens_scale(75.0, 0.0) == 1.0 and DotToolView.lens_scale(0.0, 60.0) == 1.0, "an unusable field of view scales nothing")
-	_check(is_equal_approx(DotToolView.vertical_from_horizontal_4_3(90.0), rad_to_deg(2.0 * atan(0.75))), "4:3 horizontal converts to vertical")
+	_check(GSToolView.lens_scale(75.0, 0.0) == 1.0 and GSToolView.lens_scale(0.0, 60.0) == 1.0, "an unusable field of view scales nothing")
+	_check(is_equal_approx(GSToolView.vertical_from_horizontal_4_3(90.0), rad_to_deg(2.0 * atan(0.75))), "4:3 horizontal converts to vertical")
 
 	var barrel_kind := _count_spheres(view)
-	var domed := DotToolView.make(Color.GREEN, true)
+	var domed := GSToolView.make(Color.GREEN, true)
 	_check(barrel_kind == 0 and _count_spheres(domed) == 1, "a launcher has a dome, a gun a barrel")
 	domed.queue_free()
 
@@ -519,12 +519,12 @@ func _test_tool_view() -> void:
 	_world.add_child(other)
 	var holder := Node3D.new()
 	_world.add_child(holder)
-	var by_ref := DotToolView.make(Color.RED)
-	by_ref.camera_ref = DotNodeRef.of_path(^"../../Other")
+	var by_ref := GSToolView.make(Color.RED)
+	by_ref.camera_ref = GSNodeRef.of_path(^"../../Other")
 	by_ref.hands_fov = 60.0
 	holder.add_child(by_ref)
 	by_ref._process(0.016)
-	_check(is_equal_approx(by_ref.scale.x, DotToolView.lens_scale(100.0, 60.0)), "camera_ref picks the camera, not the parent")
+	_check(is_equal_approx(by_ref.scale.x, GSToolView.lens_scale(100.0, 60.0)), "camera_ref picks the camera, not the parent")
 	_check(by_ref.describe().has("hands_fov") and by_ref.describe()["camera"], "describe reports it")
 
 	cam.queue_free()

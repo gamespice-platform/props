@@ -1,4 +1,4 @@
-class_name DotPropPieces
+class_name GSPropPieces
 extends RefCounted
 
 ## Collision shaped like the model: a prop as a few convex pieces instead of one box.

@@ -6,9 +6,9 @@
 
 **Ownership is deliberately not checked inside the tool.** Whether a player may move somebody else's crate is a server policy (a build server says no, a sandbox says yes, a competitive one says only for admins), and hard-coding either answer means the other needs a fork. The host passes `can_touch_others`. A protected owner is the exception, enforced by `may_act_on` ([spawning.md](spawning.md#protected-owners)).
 
-**One holder at a time**, enforced by `DotPropInstance.held_by`. Two guns pulling one crate toward two players makes it oscillate violently between them and costs ten times the physics step.
+**One holder at a time**, enforced by `GSPropInstance.held_by`. Two guns pulling one crate toward two players makes it oscillate violently between them and costs ten times the physics step.
 
-**The tools stay 3D.** A physics gun and a gravity gun are first-person tools with an origin and an aim direction, and a 2D game does not want either. The exception is `DotPhysGun.set_frozen`, which handles both bodies: freezing is the one prop operation a 2D game does need (a lobby pins its furniture), and a second copy of "zero the velocities, then set the mode" is a second thing that can forget the first half.
+**The tools stay 3D.** A physics gun and a gravity gun are first-person tools with an origin and an aim direction, and a 2D game does not want either. The exception is `GSPhysGun.set_frozen`, which handles both bodies: freezing is the one prop operation a 2D game does need (a lobby pins its furniture), and a second copy of "zero the velocities, then set the mode" is a second thing that can forget the first half.
 
 ## The physics gun holds with a spring
 
@@ -22,7 +22,7 @@ Teleporting a rigid body to a target transform each tick is the obvious implemen
 
 ### Its signals
 
-`grabbed`, `released` and `freeze_changed`. A game needs them to change a prop's collision layer: `DotPhysicsLayout.sandbox_3d` has `held_prop` and `frozen_prop` rows, and without a signal a game sets a prop's layer at spawn and is wrong for the rest of its life (a carried crate that still collides with its carrier shoves them backwards down a corridor).
+`grabbed`, `released` and `freeze_changed`. A game needs them to change a prop's collision layer: `GSPhysicsLayout.sandbox_3d` has `held_prop` and `frozen_prop` rows, and without a signal a game sets a prop's layer at spawn and is wrong for the rest of its life (a carried crate that still collides with its carrier shoves them backwards down a corridor).
 
 **`set_frozen` does not emit**, because it is static and a static function cannot emit an instance signal. A game calling it directly changes the state behind the tool's back and gets nothing; go through the gun's instance methods when a listener needs to know.
 
@@ -34,10 +34,10 @@ A punt is an **impulse**, not a velocity, so a heavy prop goes less far than a l
 
 A frozen prop is **refused** by the gravity gun rather than thawed. The physics gun unfreezes what it grabs, because freezing is its own tool and unfreezing is the obvious undo; a gravity gun that quietly unfroze somebody's build would take a tower apart one piece at a time.
 
-## The held model is `DotToolView`
+## The held model is `GSToolView`
 
-A `Node3D` a game puts under the camera (`DotToolView.make(colour, domed, camera)`), in the `dot_view_model` group so GameSpice Menu's `viewmodel_fov` reaches it, with a short `kick()`. It scales to the field of view with GameSpice Core's `DotViewLens` (API 25, the same maths a held weapon model uses; GameSpice Props needs GameSpice Core 25 for it) and carries no scene path: `camera_ref` (a `DotNodeRef`) names the camera, and empty means the parent. A tool is not a node, so the game owns when to build and free it and when to hide it (outside first person).
+A `Node3D` a game puts under the camera (`GSToolView.make(colour, domed, camera)`), in the `dot_view_model` group so GameSpice Menu's `viewmodel_fov` reaches it, with a short `kick()`. It scales to the field of view with GameSpice Core's `GSViewLens` (API 25, the same maths a held weapon model uses; GameSpice Props needs GameSpice Core 25 for it) and carries no scene path: `camera_ref` (a `GSNodeRef`) names the camera, and empty means the parent. A tool is not a node, so the game owns when to build and free it and when to hide it (outside first person).
 
 ## Deliberately not here
 
-- **Welding, ropes, thrusters, wheels.** Constraints are a much larger surface than spawning, they interact with each other, and a half-built constraint system is worse than none. `DotPropTool` is the hook.
+- **Welding, ropes, thrusters, wheels.** Constraints are a much larger surface than spawning, they interact with each other, and a half-built constraint system is worse than none. `GSPropTool` is the hook.

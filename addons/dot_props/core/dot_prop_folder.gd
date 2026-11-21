@@ -1,5 +1,5 @@
 @tool
-class_name DotPropFolder
+class_name GSPropFolder
 extends RefCounted
 
 ## A folder of model files becomes spawnable props, with no code and no catalogue edit.
@@ -40,10 +40,10 @@ extends RefCounted
 ## frozen server. One bad file never condemns the folder: each problem is listed and the
 ## rest load.
 ##
-## [b]The result is a [DotPropDef][/b] whose [member DotPropDef.scene_path] is the game's own
-## body scene (the host passes it), and whose [member DotPropDef.meta] carries [code]model[/code]
+## [b]The result is a [GSPropDef][/b] whose [member GSPropDef.scene_path] is the game's own
+## body scene (the host passes it), and whose [member GSPropDef.meta] carries [code]model[/code]
 ## (the file), [code]model_scale[/code], [code]shape[/code], [code]extent[/code] and [code]credit[/code]. What a
-## body does with those is [DotPropModel] and the game's. GameSpice Props does not know which
+## body does with those is [GSPropModel] and the game's. GameSpice Props does not know which
 ## scene a game builds bodies from.
 
 const CHANNEL := "props.folder"
@@ -69,15 +69,15 @@ const MAX_MODELS := 600
 ## dropped file cannot replace a built-in), [code]"measure"[/code] (false skips loading a model
 ## to measure it, for entries that carry their own extent).
 static func load_into(
-	catalogue: DotPropCatalogue, dir: String, scene_path: String, options: Dictionary = {}
-) -> DotResult:
+	catalogue: GSPropCatalogue, dir: String, scene_path: String, options: Dictionary = {}
+) -> GSResult:
 	var report := {"added": PackedStringArray(), "problems": PackedStringArray()}
 
 	if catalogue == null:
-		return DotResult.fail(DotError.CODE_INVALID, "No catalogue to add to.")
+		return GSResult.fail(GSError.CODE_INVALID, "No catalogue to add to.")
 
 	if not DirAccess.dir_exists_absolute(dir):
-		return DotResult.success(report)
+		return GSResult.success(report)
 
 	var manifest := _read_json(dir.path_join(MANIFEST))
 	var defaults: Dictionary = manifest.get("defaults", {}) if manifest.get("defaults") is Dictionary else {}
@@ -124,7 +124,7 @@ static func load_into(
 			report["problems"].append("%s: %s" % [item["stem"], made.error.message])
 			continue
 
-		var def := made.value as DotPropDef
+		var def := made.value as GSPropDef
 		var added := catalogue.add(def)
 
 		if added.ok:
@@ -133,20 +133,20 @@ static func load_into(
 			report["problems"].append("%s: %s" % [item["stem"], added.error.message])
 
 	for line in report["problems"]:
-		DotLog.warn(CHANNEL, "a model was not added", {"dir": dir, "why": line})
+		GSLog.warn(CHANNEL, "a model was not added", {"dir": dir, "why": line})
 
-	DotLog.info(CHANNEL, "a prop folder was read", {
+	GSLog.info(CHANNEL, "a prop folder was read", {
 		"dir": dir, "added": (report["added"] as PackedStringArray).size(),
 		"problems": (report["problems"] as PackedStringArray).size(),
 	})
 
-	return DotResult.success(report)
+	return GSResult.success(report)
 
 
 static func _make_def(
 	item: Dictionary, dir: String, scene_path: String, defaults: Dictionary,
-	pack_credit: Dictionary, catalogue: DotPropCatalogue, options: Dictionary
-) -> DotResult:
+	pack_credit: Dictionary, catalogue: GSPropCatalogue, options: Dictionary
+) -> GSResult:
 	var file: String = item["file"]
 	var stem: String = item["stem"]
 	var entry: Dictionary = (item["entry"] as Dictionary) if item["entry"] is Dictionary else {}
@@ -154,29 +154,29 @@ static func _make_def(
 	merged.merge(entry, true)
 
 	if file.contains("..") or file.begins_with("/") or file.contains(":"):
-		return DotResult.fail(DotError.CODE_INVALID, "A model path must stay inside its folder.", file)
+		return GSResult.fail(GSError.CODE_INVALID, "A model path must stay inside its folder.", file)
 
 	var path := dir.path_join(file)
 	var id := StringName(sanitize_id(str(merged.get("id", stem))))
 
 	if id == &"":
-		return DotResult.fail(DotError.CODE_INVALID, "That file name makes no id.", file)
+		return GSResult.fail(GSError.CODE_INVALID, "That file name makes no id.", file)
 
 	if catalogue.has(id) and not bool(options.get("overwrite", false)):
-		return DotResult.fail(DotError.CODE_INVALID, "The id is taken, rename the file or give an \"id\".", String(id))
+		return GSResult.fail(GSError.CODE_INVALID, "The id is taken, rename the file or give an \"id\".", String(id))
 
 	if not (path.begins_with("res://") or path.begins_with("uid://")):
 		var handle := FileAccess.open(path, FileAccess.READ)
 
 		if handle == null:
-			return DotResult.fail(DotError.CODE_IO, "The model cannot be opened.", path)
+			return GSResult.fail(GSError.CODE_IO, "The model cannot be opened.", path)
 
 		var length := handle.get_length()
 		handle.close()
 
 		if length > MAX_BYTES:
-			return DotResult.fail(
-				DotError.CODE_INVALID, "The model file is over %d MB." % (MAX_BYTES / 1048576), path
+			return GSResult.fail(
+				GSError.CODE_INVALID, "The model file is over %d MB." % (MAX_BYTES / 1048576), path
 			)
 
 	var shape_name := str(merged.get("shape", "convex")).to_lower()
@@ -190,7 +190,7 @@ static func _make_def(
 	if merged.has("size_m"):
 		# A side in metres is a request to measure the unscaled model and work back to a
 		# scale, which a baked extent cannot answer.
-		var raw := DotPropModel.measure(path, 1.0, shape_name)
+		var raw := GSPropModel.measure(path, 1.0, shape_name)
 		if not raw.ok:
 			return raw
 		var raw_extent: Vector3 = (raw.value as Dictionary)["extent"]
@@ -200,30 +200,30 @@ static func _make_def(
 	if baked is Array and (baked as Array).size() == 3 and not merged.has("size_m"):
 		extent = Vector3(float(baked[0]), float(baked[1]), float(baked[2]))
 	elif bool(options.get("measure", true)):
-		var measured := DotPropModel.measure(path, scale, shape_name)
+		var measured := GSPropModel.measure(path, scale, shape_name)
 		if not measured.ok:
 			return measured
 		extent = (measured.value as Dictionary)["extent"]
 	else:
 		extent = Vector3.ONE * 0.5
 
-	if not DotPropModel.size_ok(extent):
-		return DotResult.fail(
-			DotError.CODE_INVALID,
+	if not GSPropModel.size_ok(extent):
+		return GSResult.fail(
+			GSError.CODE_INVALID,
 			"The model would be %.2f m across; a prop is between %.2f and %.0f m." % [
-				maxf(extent.x, maxf(extent.y, extent.z)), DotPropModel.MIN_SIDE, DotPropModel.MAX_SIDE
+				maxf(extent.x, maxf(extent.y, extent.z)), GSPropModel.MIN_SIDE, GSPropModel.MAX_SIDE
 			],
 			path,
 		)
 
-	var def := DotPropDef.make(id, scene_path)
+	var def := GSPropDef.make(id, scene_path)
 	def.display_name = str(merged.get("name", humanize(stem)))
 	def.category = StringName(sanitize_id(str(
 		merged.get("category", item["sub"] if str(item["sub"]) != "" else options.get("category", "props"))
 	)))
 	def.mass = (
 		maxf(float(merged["mass"]), 0.1) if merged.has("mass")
-		else DotPropModel.estimate_mass(extent, float(merged.get("density", DotPropModel.DEFAULT_DENSITY)))
+		else GSPropModel.estimate_mass(extent, float(merged.get("density", GSPropModel.DEFAULT_DENSITY)))
 	)
 	def.size = _size_class(extent)
 	def.cost = clampi(int(merged.get("cost", _default_cost(def.size))), 1, 100)
@@ -246,7 +246,7 @@ static func _make_def(
 	def.meta = meta
 
 	var valid := def.validate()
-	return DotResult.success(def) if valid.ok else valid
+	return GSResult.success(def) if valid.ok else valid
 
 
 static func _credit(pack_credit: Dictionary, entry: Dictionary) -> Dictionary:
@@ -266,28 +266,28 @@ static func _credit(pack_credit: Dictionary, entry: Dictionary) -> Dictionary:
 	return out
 
 
-static func _size_class(extent: Vector3) -> DotPropDef.Size:
+static func _size_class(extent: Vector3) -> GSPropDef.Size:
 	var longest := maxf(extent.x, maxf(extent.y, extent.z))
 
 	if longest < 0.3:
-		return DotPropDef.Size.TINY
+		return GSPropDef.Size.TINY
 	if longest < 0.8:
-		return DotPropDef.Size.SMALL
+		return GSPropDef.Size.SMALL
 	if longest < 2.0:
-		return DotPropDef.Size.MEDIUM
+		return GSPropDef.Size.MEDIUM
 	if longest < 4.0:
-		return DotPropDef.Size.LARGE
+		return GSPropDef.Size.LARGE
 
-	return DotPropDef.Size.HUGE
+	return GSPropDef.Size.HUGE
 
 
-static func _default_cost(size: DotPropDef.Size) -> int:
+static func _default_cost(size: GSPropDef.Size) -> int:
 	match size:
-		DotPropDef.Size.TINY, DotPropDef.Size.SMALL:
+		GSPropDef.Size.TINY, GSPropDef.Size.SMALL:
 			return 1
-		DotPropDef.Size.MEDIUM:
+		GSPropDef.Size.MEDIUM:
 			return 2
-		DotPropDef.Size.LARGE:
+		GSPropDef.Size.LARGE:
 			return 3
 		_:
 			return 4
@@ -364,7 +364,7 @@ static func _read_json(path: String) -> Dictionary:
 	if parsed is Dictionary:
 		return parsed
 
-	DotLog.warn(CHANNEL, "a sidecar is not a JSON object", {"path": path})
+	GSLog.warn(CHANNEL, "a sidecar is not a JSON object", {"path": path})
 	return {}
 
 

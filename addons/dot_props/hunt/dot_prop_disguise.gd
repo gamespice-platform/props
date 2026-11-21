@@ -1,4 +1,4 @@
-class_name DotPropDisguise
+class_name GSPropDisguise
 extends RefCounted
 
 ## A player hiding as a prop: which one, how big it is, which way it is turned, and the
@@ -39,8 +39,8 @@ var roll: float = 0.0
 var locked: bool = false
 
 
-static func of(p_prop_id: StringName, p_size: Vector3) -> DotPropDisguise:
-	var d := DotPropDisguise.new()
+static func of(p_prop_id: StringName, p_size: Vector3) -> GSPropDisguise:
+	var d := GSPropDisguise.new()
 	d.prop_id = p_prop_id
 	d.size = p_size
 	return d
@@ -55,27 +55,27 @@ func volume() -> float:
 
 
 ## Whether [param size] is something a player may hide as, and why not.
-static func may_take(p_size: Vector3, rules: DotPropDisguiseRules) -> DotResult:
+static func may_take(p_size: Vector3, rules: GSPropDisguiseRules) -> GSResult:
 	var smallest := minf(p_size.x, minf(p_size.y, p_size.z))
 
 	if smallest <= 0.0:
-		return DotResult.fail(DotError.CODE_INVALID, "That has no size.")
+		return GSResult.fail(GSError.CODE_INVALID, "That has no size.")
 
 	if smallest < rules.min_dimension:
-		return DotResult.fail(DotError.CODE_INVALID,
+		return GSResult.fail(GSError.CODE_INVALID,
 			"That is too small to hide as (%.2f m, the least is %.2f m)." % [smallest, rules.min_dimension])
 
 	var v := absf(p_size.x * p_size.y * p_size.z)
 
 	if rules.max_volume > 0.0 and v > rules.max_volume:
-		return DotResult.fail(DotError.CODE_INVALID,
+		return GSResult.fail(GSError.CODE_INVALID,
 			"That is too big to hide as (%.1f m³, the most is %.1f m³)." % [v, rules.max_volume])
 
-	return DotResult.success(null)
+	return GSResult.success(null)
 
 
 ## The collision capsule for [param p_size]: `Vector2(radius, height)`.
-static func hull(p_size: Vector3, rules: DotPropDisguiseRules) -> Vector2:
+static func hull(p_size: Vector3, rules: GSPropDisguiseRules) -> Vector2:
 	var radius := clampf(minf(p_size.x, p_size.z) * 0.5, rules.hull_min_radius, rules.hull_max_radius)
 	var height := clampf(p_size.y, rules.hull_min_height, rules.hull_max_height)
 	# A capsule cannot be shorter than it is wide; a flat prop gets a squat capsule, not an error.
@@ -84,14 +84,14 @@ static func hull(p_size: Vector3, rules: DotPropDisguiseRules) -> Vector2:
 
 
 ## How much health a prop of [param p_size] has.
-static func health(p_size: Vector3, rules: DotPropDisguiseRules) -> float:
+static func health(p_size: Vector3, rules: GSPropDisguiseRules) -> float:
 	var v := maxf(absf(p_size.x * p_size.y * p_size.z), 0.000001)
 	return clampf(round(rules.health_scale * pow(v, rules.health_exponent)), rules.min_health, rules.max_health)
 
 
 ## The health a player has after changing from a disguise worth [param old_max] to one worth
-## [param new_max], having [param current]. See [member DotPropDisguiseRules.keep_health_fraction].
-static func health_after(current: float, old_max: float, new_max: float, rules: DotPropDisguiseRules) -> float:
+## [param new_max], having [param current]. See [member GSPropDisguiseRules.keep_health_fraction].
+static func health_after(current: float, old_max: float, new_max: float, rules: GSPropDisguiseRules) -> float:
 	if not rules.keep_health_fraction or old_max <= 0.0:
 		return new_max
 
@@ -99,7 +99,7 @@ static func health_after(current: float, old_max: float, new_max: float, rules: 
 
 
 ## Whether a prop whose nearest point is [param target] is close enough to [param eye] to copy.
-static func within_reach(eye: Vector3, target: Vector3, rules: DotPropDisguiseRules) -> bool:
+static func within_reach(eye: Vector3, target: Vector3, rules: GSPropDisguiseRules) -> bool:
 	return eye.distance_to(target) <= rules.reach
 
 
@@ -136,7 +136,7 @@ func standing_size() -> Vector3:
 ## under the floor: a hiding place nobody could shoot, which is cheating. The middle stands at
 ## half the standing height ([method middle_height]), so the lowest corner of the box rests on
 ## the floor whatever the turn, and the hull is the leant box's.
-func standing_hull(rules: DotPropDisguiseRules) -> Vector2:
+func standing_hull(rules: GSPropDisguiseRules) -> Vector2:
 	return hull(standing_size(), rules)
 
 
@@ -161,7 +161,7 @@ func box_transform(view_yaw: float = 0.0) -> Transform3D:
 
 ## Tilts by [param steps] of the rules' step, forward ([param forward]) or sideways, within
 ## the rules' limit. Returns whether anything changed.
-func tilt(steps: int, forward: bool, rules: DotPropDisguiseRules) -> bool:
+func tilt(steps: int, forward: bool, rules: GSPropDisguiseRules) -> bool:
 	var before := Vector2(pitch, roll)
 	var by := rules.tilt_step * float(steps)
 
@@ -197,8 +197,8 @@ func to_wire() -> Dictionary:
 	}
 
 
-static func from_wire(wire: Dictionary) -> DotPropDisguise:
-	var d := DotPropDisguise.new()
+static func from_wire(wire: Dictionary) -> GSPropDisguise:
+	var d := GSPropDisguise.new()
 	d.prop_id = StringName(str(wire.get("p", "")))
 	var s: Array = wire.get("s", [0, 0, 0])
 
@@ -212,7 +212,7 @@ static func from_wire(wire: Dictionary) -> DotPropDisguise:
 	return d
 
 
-func duplicate_value() -> DotPropDisguise:
+func duplicate_value() -> GSPropDisguise:
 	return from_wire(to_wire())
 
 

@@ -1,4 +1,4 @@
-class_name DotPropBridge
+class_name GSPropBridge
 extends Node3D
 
 ## A plank bridge that sags under load and collapses under speed or weight. The caller reports
