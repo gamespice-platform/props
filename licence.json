@@ -1,0 +1,19 @@
+[
+  {
+    "paths": [
+      ""
+    ],
+    "licence": "MIT",
+    "author": "gs-props contributors",
+    "title": "gs-props code (LICENSE)"
+  },
+  {
+    "paths": [
+      "addons/gs_props/toys/models"
+    ],
+    "licence": "CC0-1.0",
+    "author": "gs-props contributors",
+    "title": "Toy look models",
+    "source": "own work, built by art-src/build_toy_models.py (docstring: Own work, CC0)"
+  }
+]
