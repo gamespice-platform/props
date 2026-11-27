@@ -221,6 +221,26 @@ Replicate each toy by its index with `state_transform()`, `on` and `count`, and 
 
 The old `sv_toys*` names still work as aliases.
 
+## Used by
+
+Every game except Look At Me vendors it:
+
+- [Fatal Contact](https://zeesgames.com/fatal-contact)
+- [Airdrift](https://zeesgames.com/airdrift)
+- [Playlot](https://zeesgames.com/playlot) - the prop spawner and physics gun
+- [Hungario](https://zeesgames.com/hungario)
+- [Buses From Hell](https://zeesgames.com/buses-from-hell)
+- [Smash Copter](https://zeesgames.com/smash-copter) - the cannon's falling props
+- [Zombie Zone](https://zeesgames.com/zombie-zone)
+- [Hide n Seek](https://zeesgames.com/hide-n-seek)
+- [Prop Hunt](https://zeesgames.com/prop-hunt) - hiders disguise as props
+- [Murder Mystery](https://zeesgames.com/murder-mystery)
+- [Deathrun](https://zeesgames.com/deathrun)
+- [Wipeout](https://zeesgames.com/wipeout)
+- [Dangerous Delivery](https://zeesgames.com/dangerous-delivery)
+
+The whole collection is at [zeesgames.com](https://zeesgames.com).
+
 ## Credits
 
 | Asset | Author / source | License |
@@ -237,6 +257,6 @@ Import the project once, then run `examples/props_selftest.tscn` headless with G
 
 ## Status and licence
 
-Part of the [**GameSpice**](https://gamespice.net) platform: a family of Godot addons. Written with Claude Code and maintained by `gamemann`. Every addon has headless tests, but little of this has been played by real users yet, so expect rough edges and please [open an issue](https://github.com/gamespice-platform/props/issues) when you hit one.
+Part of the [**GameSpice**](https://gamespice.net) platform: a family of Godot addons, MIT licensed and built with Claude Code. The headless scene `props_selftest` covers it (see Testing). Games in [Zee's Games](https://zeesgames.com) are built on GameSpice addons and run on live servers, and props are spawned, carried and broken in them every round. Report bugs on the [issue tracker](https://github.com/gamespice-platform/props/issues).
 
 MIT licence, see [LICENSE](LICENSE). The only closed part of the [**GameSpice**](https://gamespice.net) platform is the web back end; you can use your own instead of GameSpice's.
