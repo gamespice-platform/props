@@ -1,0 +1,7 @@
+# Runtime scripts checked by gs-ci scripts/check-gd-perf.py (tools/gd_perf_lint.py).
+# One fnmatch glob per line over tracked paths. Baseline: ci/efficiency/gd-perf.tsv.
+addons/gs_props/runtime/*.gd
+addons/gs_props/hunt/*.gd
+addons/gs_props/tools/gs_phys_gun.gd
+addons/gs_props/tools/gs_grav_gun.gd
+addons/gs_props/toys/gs_prop_toy.gd

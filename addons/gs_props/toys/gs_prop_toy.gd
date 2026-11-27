@@ -27,6 +27,8 @@ func build(p_def: Dictionary, p_placement: Dictionary, p_layers: Dictionary) -> 
 	layers = p_layers
 	kind = StringName(def.get("kind", &"ball"))
 	_size = def.get("size", Vector3.ONE)
+	_damp = float(def.get("angular_damp", 0.2))
+	_mass = float(def.get("mass", 1.0))
 	on = bool(placement.get("on", def.get("on", false)))
 	for raw: Variant in placement.get("links", []):
 		links.append(int(raw))
@@ -110,16 +112,16 @@ func _physics_process(delta: float) -> void:
 	var torque := _torque
 	_torque = Vector3.ZERO
 	var accel := Vector3.ZERO
-	var damp := float(def.get("angular_damp", 0.2))
+	var damp := _damp
 	match kind:
 		&"swing", &"bag":
 			var length := maxf(_hang.length(), 0.2)
 			accel = Vector3(-gravity / length * sin(_angle.x), 0, -gravity / length * sin(_angle.z))
 		&"seesaw":
-			var inertia := maxf(float(def.get("mass", 1.0)) * _size.x * _size.x / 12.0, 0.1)
+			var inertia := maxf(_mass * _size.x * _size.x / 12.0, 0.1)
 			accel = torque / inertia
 		&"wobble":
-			var inertia := maxf(float(def.get("mass", 1.0)) * (_size.x * _size.x + _size.z * _size.z) / 12.0, 0.1)
+			var inertia := maxf(_mass * (_size.x * _size.x + _size.z * _size.z) / 12.0, 0.1)
 			accel = (torque - _angle * WOBBLE_SPRING) / inertia
 			damp = WOBBLE_DAMP
 	var resting := accel.length_squared() < 0.0001 and _spin.length_squared() < 0.0004
@@ -137,7 +139,7 @@ func _physics_process(delta: float) -> void:
 		_angle.x = clampf(_angle.x, -1.3, 1.3)
 		_angle.z = clampf(_angle.z, -1.3, 1.3)
 	if _limit > 0.0:
-		for i in [0, 2]:
+		for i: int in _TILT_AXES:
 			if absf(_angle[i]) > _limit:
 				_angle[i] = signf(_angle[i]) * _limit
 				# An end hits the ground: most of the spin goes, a little comes back.
@@ -204,6 +206,11 @@ func use(origin: Vector3, direction: Vector3) -> bool:
 ## `func(index: int) -> bool`: flips the box's toy [param index] and says whether it is on now.
 ## The box hands every switch this.
 var link_fn: Callable = Callable()
+## The definition's angular damping and mass, read once in [method build] for the physics tick.
+var _damp: float = 0.2
+var _mass: float = 1.0
+## The tilt axes a limited toy clamps (x and z).
+const _TILT_AXES: Array[int] = [0, 2]
 
 
 func _set_on(value: bool) -> void:
